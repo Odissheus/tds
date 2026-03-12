@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TDS — Tech Deep Search | React SRL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'google-blue': '#4285F4',
+                        'google-green': '#34A853',
+                        'google-yellow': '#FBBC05',
+                        'google-red': '#EA4335',
+                    },
+                    fontFamily: {
+                        'roboto': ['Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #4285F4;
+            animation: typing 1.4s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a2e; }
+        ::-webkit-scrollbar-thumb { background: #4285F4; border-radius: 3px; }
+    </style>
+</head>
+<body class="dark bg-gray-950 text-gray-100 min-h-screen">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line } = Recharts;
+
+// ========================
+// API Helper
+// ========================
+const api = {
+    get: async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return res.json();
+    },
+    post: async (url, data) => {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return res.json();
+    },
+    patch: async (url, data) => {
+        const res = await fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (!res.ok) throw new Error(`API error: ${res.status}`);
+        return res.json();
+    },
+};
+
+// ========================
+// Badge Components
+// ========================
+function Badge({ children, color = 'blue' }) {
+    const colors = {
+        blue: 'bg-google-blue/20 text-google-blue',
+        green: 'bg-google-green/20 text-google-green',
+        yellow: 'bg-google-yellow/20 text-google-yellow',
+        red: 'bg-google-red/20 text-google-red',
+        gray: 'bg-gray-700 text-gray-300',
+        orange: 'bg-orange-500/20 text-orange-400',
+    };
+    return <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[color] || colors.blue}`}>{children}</span>;
+}
+
+function CategoryBadge({ category }) {
+    const map = { smartphone: 'blue', earable: 'green', wearable: 'yellow', accessory: 'gray', bundle: 'orange' };
+    return <Badge color={map[category] || 'gray'}>{category}</Badge>;
+}
+
+function TierBadge({ tier }) {
+    return <Badge color={tier === 1 ? 'blue' : 'gray'}>Tier {tier}</Badge>;
+}
+
+function StatusBadge({ status }) {
+    const map = { active: 'green', eol: 'yellow', disabled: 'red' };
+    return <Badge color={map[status] || 'gray'}>{status}</Badge>;
+}
+
+// ========================
+// Header
+// ========================
+function Header({ activeTab, setActiveTab }) {
+    const [time, setTime] = useState(new Date());
+    useEffect(() => {
+        const t = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(t);
+    }, []);
+
+    const tabs = [
+        { id: 'promozioni', label: '📊 Promozioni Live' },
+        { id: 'catalogo', label: '📱 Catalogo' },
+        { id: 'chat', label: '💬 Chat Analyst' },
+        { id: 'report', label: '📄 Report & Storico' },
+        { id: 'sistema', label: '⚙️ Sistema' },
+    ];
+
+    return (
+        <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-50">
+            <div className="max-w-[1600px] mx-auto px-4">
+                <div className="flex items-center justify-between h-14">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-xl font-bold">
+                            <span className="text-google-blue">TDS</span>
+                            <span className="text-gray-400 font-light ml-2">Tech Deep Search</span>
+                        </h1>
+                        <span className="text-xs text-gray-500">© React SRL</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs text-gray-400">{time.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} — {time.toLocaleTimeString('it-IT')}</span>
+                        <span className="flex items-center gap-1 text-xs"><span className="w-2 h-2 rounded-full bg-google-green animate-pulse"></span> Sistema attivo</span>
+                    </div>
+                </div>
+                <nav className="flex gap-1 -mb-px">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-all ${
+                                activeTab === tab.id
+                                    ? 'bg-gray-800 text-google-blue border-b-2 border-google-blue'
+                                    : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </nav>
+            </div>
+        </header>
+    );
+}
+
+// ========================
+// Multi-select Filter
+// ========================
+function MultiSelect({ label, options, selected, onChange }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="relative">
+            <button onClick={() => setOpen(!open)} className="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs flex items-center gap-1 hover:border-google-blue transition-colors">
+                {label} {selected.length > 0 && <Badge color="blue">{selected.length}</Badge>}
+                <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {open && (
+                <div className="absolute top-full mt-1 bg-gray-800 border border-gray-700 rounded shadow-xl z-20 min-w-[160px]">
+                    {options.map(opt => (
+                        <label key={opt} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-gray-700 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={selected.includes(opt)}
+                                onChange={() => {
+                                    onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
+                                }}
+                                className="rounded border-gray-600"
+                            />
+                            {opt}
+                        </label>
+                    ))}
+                    {selected.length > 0 && (
+                        <button onClick={() => onChange([])} className="w-full text-xs text-google-red px-3 py-1 hover:bg-gray-700">Pulisci</button>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ========================
+// TAB 1: Promozioni Live
+// ========================
+function PromozioniTab() {
+    const [promos, setPromos] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({ brands: [], categories: [], retailers: [], tier: null, googleOnly: false, week: '' });
+    const brands = ['Google', 'Samsung', 'Apple', 'Honor', 'OPPO', 'Xiaomi', 'Redmi', 'POCO', 'Motorola'];
+    const categories = ['smartphone', 'earable', 'wearable', 'accessory', 'bundle'];
+    const retailers = ['euronics', 'unieuro', 'mediaworld'];
+
+    useEffect(() => {
+        loadPromos();
+    }, [filters.week]);
+
+    const loadPromos = async () => {
+        setLoading(true);
+        try {
+            let url = '/api/promotions';
+            const params = new URLSearchParams();
+            if (filters.week) params.set('week', filters.week);
+            if (params.toString()) url += '?' + params.toString();
+            const data = await api.get(url);
+            setPromos(data);
+        } catch (e) {
+            console.error('Error loading promos:', e);
+        }
+        setLoading(false);
+    };
+
+    const filtered = promos.filter(p => {
+        if (filters.brands.length && !filters.brands.includes(p.brand)) return false;
+        if (filters.categories.length && !filters.categories.includes(p.category)) return false;
+        if (filters.retailers.length && !filters.retailers.includes(p.retailer)) return false;
+        if (filters.tier !== null && p.tier !== filters.tier) return false;
+        if (filters.googleOnly && !p.is_google) return false;
+        return true;
+    });
+
+    return (
+        <div>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+                <MultiSelect label="Brand" options={brands} selected={filters.brands} onChange={v => setFilters({...filters, brands: v})} />
+                <MultiSelect label="Categoria" options={categories} selected={filters.categories} onChange={v => setFilters({...filters, categories: v})} />
+                <MultiSelect label="Retailer" options={retailers} selected={filters.retailers} onChange={v => setFilters({...filters, retailers: v})} />
+                <button
+                    onClick={() => setFilters({...filters, tier: filters.tier === 1 ? null : 1})}
+                    className={`px-3 py-1.5 rounded text-xs border transition-colors ${filters.tier === 1 ? 'bg-google-blue/20 border-google-blue text-google-blue' : 'bg-gray-800 border-gray-700 text-gray-400'}`}
+                >Tier 1</button>
+                <button
+                    onClick={() => setFilters({...filters, googleOnly: !filters.googleOnly})}
+                    className={`px-3 py-1.5 rounded text-xs border transition-colors ${filters.googleOnly ? 'bg-google-green/20 border-google-green text-google-green' : 'bg-gray-800 border-gray-700 text-gray-400'}`}
+                >Solo Google</button>
+                <input
+                    type="text"
+                    placeholder="Settimana (es. 2026-W11)"
+                    value={filters.week}
+                    onChange={e => setFilters({...filters, week: e.target.value})}
+                    className="bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-xs w-40 focus:border-google-blue outline-none"
+                />
+                <button onClick={loadPromos} className="bg-google-blue hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs">🔄 Aggiorna</button>
+            </div>
+
+            {loading ? (
+                <div className="text-center py-10 text-gray-500">Caricamento promozioni...</div>
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-gray-800">
+                    <table className="w-full text-xs">
+                        <thead className="bg-gray-800/80">
+                            <tr>
+                                <th className="text-left px-3 py-2 font-medium">Brand</th>
+                                <th className="text-left px-3 py-2 font-medium">Modello</th>
+                                <th className="text-left px-3 py-2 font-medium">Categoria</th>
+                                <th className="text-left px-3 py-2 font-medium">Retailer</th>
+                                <th className="text-right px-3 py-2 font-medium">Prezzo Orig.</th>
+                                <th className="text-right px-3 py-2 font-medium">Prezzo Promo</th>
+                                <th className="text-right px-3 py-2 font-medium">Sconto</th>
+                                <th className="text-left px-3 py-2 font-medium">Validità</th>
+                                <th className="text-left px-3 py-2 font-medium">Fonte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtered.length === 0 ? (
+                                <tr><td colSpan={9} className="text-center py-8 text-gray-500">Nessuna promozione trovata per i filtri selezionati</td></tr>
+                            ) : filtered.map((p, i) => (
+                                <tr key={p.id || i} className="border-t border-gray-800/50 hover:bg-gray-800/30">
+                                    <td className="px-3 py-2 font-medium">{p.brand}</td>
+                                    <td className="px-3 py-2">{p.model}</td>
+                                    <td className="px-3 py-2"><CategoryBadge category={p.category} /></td>
+                                    <td className="px-3 py-2 capitalize">{p.retailer}{p.retailer_variant ? ` (${p.retailer_variant})` : ''}</td>
+                                    <td className="px-3 py-2 text-right text-gray-400">€{p.prezzo_originale?.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right font-bold text-white">€{p.prezzo_promo?.toFixed(2)}</td>
+                                    <td className="px-3 py-2 text-right">
+                                        {p.sconto_percentuale >= 20 ? (
+                                            <Badge color="green">-{p.sconto_percentuale?.toFixed(1)}%</Badge>
+                                        ) : !p.is_google && p.sconto_percentuale >= 15 ? (
+                                            <Badge color="orange">🔥 -{p.sconto_percentuale?.toFixed(1)}%</Badge>
+                                        ) : (
+                                            <span className="text-gray-400">-{p.sconto_percentuale?.toFixed(1)}%</span>
+                                        )}
+                                    </td>
+                                    <td className="px-3 py-2 text-gray-400">{p.data_inizio}{p.data_fine ? ` — ${p.data_fine}` : ''}</td>
+                                    <td className="px-3 py-2">
+                                        {p.url_fonte && <a href={p.url_fonte} target="_blank" rel="noopener" className="text-google-blue hover:underline">🔗</a>}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            <div className="text-xs text-gray-500 mt-2">{filtered.length} promozioni visualizzate</div>
+        </div>
+    );
+}
+
+// ========================
+// TAB 2: Catalogo
+// ========================
+function CatalogoTab() {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({ brands: [], categories: [], tier: null, status: null, googleOnly: false });
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [editingCell, setEditingCell] = useState(null);
+    const [editValue, setEditValue] = useState('');
+    const brands = ['Google', 'Samsung', 'Apple', 'Honor', 'OPPO', 'Xiaomi', 'Redmi', 'POCO', 'Motorola'];
+
+    useEffect(() => { loadProducts(); }, []);
+
+    const loadProducts = async () => {
+        setLoading(true);
+        try { setProducts(await api.get('/api/products')); } catch (e) { console.error(e); }
+        setLoading(false);
+    };
+
+    const updateProduct = async (id, field, value) => {
+        try {
+            await api.patch(`/api/products/${id}`, { [field]: value });
+            loadProducts();
+        } catch (e) { console.error(e); }
+        setEditingCell(null);
+    };
+
+    const triggerScrape = async (id) => {
+        try {
+            const res = await api.post(`/api/scrape/${id}`, {});
+            alert(`Scraping avviato: ${res.message}`);
+        } catch (e) { alert('Errore scraping: ' + e.message); }
+    };
+
+    const filtered = products.filter(p => {
+        if (filters.brands.length && !filters.brands.includes(p.brand)) return false;
+        if (filters.categories.length && !filters.categories.includes(p.category)) return false;
+        if (filters.tier !== null && p.tier !== filters.tier) return false;
+        if (filters.status && p.status !== filters.status) return false;
+        if (filters.googleOnly && !p.is_google) return false;
+        return true;
+    });
+
+    return (
+        <div>
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+                <MultiSelect label="Brand" options={brands} selected={filters.brands} onChange={v => setFilters({...filters, brands: v})} />
+                <MultiSelect label="Categoria" options={['smartphone','earable','wearable','accessory','bundle']} selected={filters.categories} onChange={v => setFilters({...filters, categories: v})} />
+                {[1,2].map(t => (
+                    <button key={t} onClick={() => setFilters({...filters, tier: filters.tier === t ? null : t})}
+                        className={`px-3 py-1.5 rounded text-xs border ${filters.tier === t ? 'bg-google-blue/20 border-google-blue text-google-blue' : 'bg-gray-800 border-gray-700 text-gray-400'}`}>
+                        Tier {t}
+                    </button>
+                ))}
+                {['active','eol','disabled'].map(s => (
+                    <button key={s} onClick={() => setFilters({...filters, status: filters.status === s ? null : s})}
+                        className={`px-3 py-1.5 rounded text-xs border capitalize ${filters.status === s ? 'bg-google-green/20 border-google-green text-google-green' : 'bg-gray-800 border-gray-700 text-gray-400'}`}>
+                        {s}
+                    </button>
+                ))}
+                <button onClick={() => setFilters({...filters, googleOnly: !filters.googleOnly})}
+                    className={`px-3 py-1.5 rounded text-xs border ${filters.googleOnly ? 'bg-google-green/20 border-google-green text-google-green' : 'bg-gray-800 border-gray-700 text-gray-400'}`}>
+                    Solo Google
+                </button>
+                <div className="ml-auto flex gap-2">
+                    <button onClick={() => setShowAddModal(true)} className="bg-google-blue hover:bg-blue-600 text-white px-3 py-1.5 rounded text-xs">+ Aggiungi Prodotto</button>
+                    <button onClick={() => setShowImportModal(true)} className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-xs">📋 Import Lista</button>
+                </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-gray-800">
+                <table className="w-full text-xs">
+                    <thead className="bg-gray-800/80">
+                        <tr>
+                            <th className="text-left px-3 py-2">Brand</th>
+                            <th className="text-left px-3 py-2">Serie</th>
+                            <th className="text-left px-3 py-2">Modello</th>
+                            <th className="text-left px-3 py-2">Categoria</th>
+                            <th className="text-center px-3 py-2">Tier</th>
+                            <th className="text-center px-3 py-2">Status</th>
+                            <th className="text-right px-3 py-2">Listino</th>
+                            <th className="text-center px-3 py-2">Streak</th>
+                            <th className="text-center px-3 py-2">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filtered.map(p => (
+                            <tr key={p.id} className={`border-t border-gray-800/50 hover:bg-gray-800/30 ${p.not_found_streak >= 3 ? 'bg-red-900/10' : ''}`}>
+                                <td className="px-3 py-2 font-medium">{p.brand}</td>
+                                <td className="px-3 py-2 text-gray-400">{p.series}</td>
+                                <td className="px-3 py-2">{p.model}</td>
+                                <td className="px-3 py-2"><CategoryBadge category={p.category} /></td>
+                                <td className="px-3 py-2 text-center">
+                                    {editingCell === `${p.id}-tier` ? (
+                                        <select value={editValue} onChange={e => { setEditValue(e.target.value); updateProduct(p.id, 'tier', parseInt(e.target.value)); }}
+                                            className="bg-gray-700 rounded px-1 py-0.5 text-xs" autoFocus onBlur={() => setEditingCell(null)}>
+                                            <option value="1">1</option><option value="2">2</option>
+                                        </select>
+                                    ) : (
+                                        <span onClick={() => { setEditingCell(`${p.id}-tier`); setEditValue(p.tier); }} className="cursor-pointer"><TierBadge tier={p.tier} /></span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    {editingCell === `${p.id}-status` ? (
+                                        <select value={editValue} onChange={e => { setEditValue(e.target.value); updateProduct(p.id, 'status', e.target.value); }}
+                                            className="bg-gray-700 rounded px-1 py-0.5 text-xs" autoFocus onBlur={() => setEditingCell(null)}>
+                                            <option value="active">active</option><option value="eol">eol</option><option value="disabled">disabled</option>
+                                        </select>
+                                    ) : (
+                                        <span onClick={() => { setEditingCell(`${p.id}-status`); setEditValue(p.status); }} className="cursor-pointer"><StatusBadge status={p.status} /></span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2 text-right">
+                                    {editingCell === `${p.id}-listino` ? (
+                                        <input type="number" value={editValue} onChange={e => setEditValue(e.target.value)}
+                                            onKeyDown={e => { if (e.key === 'Enter') updateProduct(p.id, 'listino_eur', parseFloat(editValue)); }}
+                                            onBlur={() => setEditingCell(null)}
+                                            className="bg-gray-700 rounded px-1 py-0.5 text-xs w-20 text-right" autoFocus />
+                                    ) : (
+                                        <span onClick={() => { setEditingCell(`${p.id}-listino`); setEditValue(p.listino_eur || ''); }} className="cursor-pointer text-gray-300">
+                                            {p.listino_eur ? `€${p.listino_eur.toFixed(2)}` : '—'}
+                                        </span>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    {p.not_found_streak >= 3 ? <Badge color="red">{p.not_found_streak}</Badge> : <span className="text-gray-500">{p.not_found_streak}</span>}
+                                </td>
+                                <td className="px-3 py-2 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                        <button onClick={() => triggerScrape(p.id)} title="Scraping immediato" className="hover:bg-gray-700 rounded p-1">🔄</button>
+                                        <button onClick={() => updateProduct(p.id, 'status', p.status === 'disabled' ? 'active' : 'disabled')}
+                                            title={p.status === 'disabled' ? 'Abilita' : 'Disabilita'}
+                                            className="hover:bg-gray-700 rounded p-1">{p.status === 'disabled' ? '👁️' : '🚫'}</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="text-xs text-gray-500 mt-2">{filtered.length} prodotti su {products.length}</div>
+
+            {showAddModal && <AddProductModal onClose={() => setShowAddModal(false)} onAdded={loadProducts} />}
+            {showImportModal && <ImportModal onClose={() => setShowImportModal(false)} onImported={loadProducts} />}
+        </div>
+    );
+}
+
+// ========================
+// Add Product Modal
+// ========================
+function AddProductModal({ onClose, onAdded }) {
+    const [brand, setBrand] = useState('');
+    const [modelRaw, setModelRaw] = useState('');
+    const [suggestion, setSuggestion] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const brands = ['Google', 'Samsung', 'Apple', 'Honor', 'OPPO', 'Xiaomi', 'Redmi', 'POCO', 'Motorola'];
+
+    const suggest = async () => {
+        setLoading(true);
+        try {
+            const data = await api.post('/api/products/suggest', { brand, model_name_raw: modelRaw });
+            setSuggestion(data);
+        } catch (e) { alert('Errore: ' + e.message); }
+        setLoading(false);
+    };
+
+    const save = async () => {
+        if (!suggestion) return;
+        setSaving(true);
+        try {
+            await api.post('/api/products', {
+                brand,
+                series: suggestion.series,
+                model: suggestion.model,
+                category: suggestion.category,
+                tier: suggestion.tier_suggested,
+                is_google: brand === 'Google',
+                listino_eur: suggestion.listino_eur,
+            });
+            onAdded();
+            onClose();
+        } catch (e) { alert('Errore: ' + e.message); }
+        setSaving(false);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-lg">
+                <h3 className="text-lg font-bold text-google-blue mb-4">+ Aggiungi Prodotto</h3>
+                <div className="space-y-3">
+                    <select value={brand} onChange={e => setBrand(e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm">
+                        <option value="">Seleziona Brand</option>
+                        {brands.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                    <input value={modelRaw} onChange={e => setModelRaw(e.target.value)} placeholder="Nome modello (es. Galaxy S26 Ultra)"
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm" />
+                    <button onClick={suggest} disabled={!brand || !modelRaw || loading}
+                        className="w-full bg-google-blue hover:bg-blue-600 disabled:bg-gray-700 text-white py-2 rounded text-sm">
+                        {loading ? '⏳ Analisi AI...' : '🤖 Suggerisci con AI'}
+                    </button>
+                </div>
+
+                {suggestion && (
+                    <div className="mt-4 bg-gray-800 rounded-lg p-4 space-y-2">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div><span className="text-gray-400">Serie:</span> <input value={suggestion.series} onChange={e => setSuggestion({...suggestion, series: e.target.value})} className="bg-gray-700 rounded px-2 py-1 ml-1 w-32" /></div>
+                            <div><span className="text-gray-400">Modello:</span> <input value={suggestion.model} onChange={e => setSuggestion({...suggestion, model: e.target.value})} className="bg-gray-700 rounded px-2 py-1 ml-1 w-32" /></div>
+                            <div><span className="text-gray-400">Categoria:</span> <select value={suggestion.category} onChange={e => setSuggestion({...suggestion, category: e.target.value})} className="bg-gray-700 rounded px-2 py-1 ml-1">
+                                {['smartphone','earable','wearable','accessory','bundle'].map(c => <option key={c} value={c}>{c}</option>)}
+                            </select></div>
+                            <div><span className="text-gray-400">Listino:</span> <input type="number" value={suggestion.listino_eur} onChange={e => setSuggestion({...suggestion, listino_eur: parseFloat(e.target.value)})} className="bg-gray-700 rounded px-2 py-1 ml-1 w-24" /></div>
+                            <div><span className="text-gray-400">Tier suggerito:</span> <Badge color={suggestion.tier_suggested === 1 ? 'blue' : 'gray'}>{suggestion.tier_suggested}</Badge></div>
+                        </div>
+                        {suggestion.notes && <p className="text-xs text-gray-400 italic mt-2">{suggestion.notes}</p>}
+                        <button onClick={save} disabled={saving} className="w-full bg-google-green hover:bg-green-600 text-white py-2 rounded text-sm mt-3">
+                            {saving ? '⏳ Salvataggio...' : '✅ Conferma e Salva'}
+                        </button>
+                    </div>
+                )}
+
+                <button onClick={onClose} className="w-full mt-3 text-gray-400 hover:text-white text-sm py-1">Annulla</button>
+            </div>
+        </div>
+    );
+}
+
+// ========================
+// Import Modal
+// ========================
+function ImportModal({ onClose, onImported }) {
+    const [text, setText] = useState('');
+    const [preview, setPreview] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [excluded, setExcluded] = useState(new Set());
+
+    const analyze = async () => {
+        setLoading(true);
+        try {
+            const data = await api.post('/api/products/import-batch', { text });
+            setPreview(data.products);
+        } catch (e) { alert('Errore: ' + e.message); }
+        setLoading(false);
+    };
+
+    const confirm = async () => {
+        setLoading(true);
+        try {
+            const toImport = preview.filter((_, i) => !excluded.has(i));
+            await api.post('/api/products/import-batch/confirm', { products: toImport });
+            onImported();
+            onClose();
+        } catch (e) { alert('Errore: ' + e.message); }
+        setLoading(false);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <h3 className="text-lg font-bold text-google-blue mb-4">📋 Import Lista Prodotti</h3>
+                {!preview ? (
+                    <div className="space-y-3">
+                        <textarea value={text} onChange={e => setText(e.target.value)} rows={6}
+                            placeholder="Incolla lista prodotti (uno per riga)&#10;Es: Samsung Galaxy S26, iPhone 18 Pro, Pixel 11"
+                            className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm" />
+                        <button onClick={analyze} disabled={!text || loading}
+                            className="w-full bg-google-blue hover:bg-blue-600 disabled:bg-gray-700 text-white py-2 rounded text-sm">
+                            {loading ? '⏳ Analisi AI...' : '🤖 Analizza'}
+                        </button>
+                    </div>
+                ) : (
+                    <div>
+                        <table className="w-full text-xs mb-4">
+                            <thead className="bg-gray-800"><tr>
+                                <th className="px-2 py-1"></th><th className="px-2 py-1 text-left">Brand</th><th className="px-2 py-1 text-left">Modello</th>
+                                <th className="px-2 py-1 text-left">Categoria</th><th className="px-2 py-1 text-right">Listino</th><th className="px-2 py-1">Tier</th>
+                            </tr></thead>
+                            <tbody>
+                                {preview.map((p, i) => (
+                                    <tr key={i} className={`border-t border-gray-800 ${excluded.has(i) ? 'opacity-30' : ''}`}>
+                                        <td className="px-2 py-1"><input type="checkbox" checked={!excluded.has(i)} onChange={() => {
+                                            const next = new Set(excluded);
+                                            excluded.has(i) ? next.delete(i) : next.add(i);
+                                            setExcluded(next);
+                                        }} /></td>
+                                        <td className="px-2 py-1">{p.brand}</td>
+                                        <td className="px-2 py-1">{p.model}</td>
+                                        <td className="px-2 py-1"><CategoryBadge category={p.category} /></td>
+                                        <td className="px-2 py-1 text-right">€{p.listino_eur?.toFixed(2)}</td>
+                                        <td className="px-2 py-1 text-center"><TierBadge tier={p.tier_suggested || p.tier || 1} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button onClick={confirm} disabled={loading} className="w-full bg-google-green hover:bg-green-600 text-white py-2 rounded text-sm">
+                            {loading ? '⏳...' : `✅ Conferma Import (${preview.length - excluded.size} prodotti)`}
+                        </button>
+                    </div>
+                )}
+                <button onClick={onClose} className="w-full mt-3 text-gray-400 hover:text-white text-sm py-1">Annulla</button>
+            </div>
+        </div>
+    );
+}
+
+// ========================
+// TAB 3: Chat Analyst
+// ========================
+function ChatTab() {
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const chatEndRef = useRef(null);
+
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    const sendMessage = async () => {
+        if (!input.trim() || isStreaming) return;
+        const userMsg = input.trim();
+        setInput('');
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+        setIsStreaming(true);
+        setPdfUrl(null);
+
+        try {
+            const response = await fetch('/api/chat/stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: userMsg,
+                    conversation_history: messages.map(m => ({ role: m.role, content: m.content })),
+                }),
+            });
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let assistantText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line.slice(6));
+                        if (data.type === 'text') {
+                            assistantText += data.content;
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const lastIdx = updated.length - 1;
+                                if (updated[lastIdx]?.role === 'assistant') {
+                                    updated[lastIdx] = { role: 'assistant', content: assistantText };
+                                } else {
+                                    updated.push({ role: 'assistant', content: assistantText });
+                                }
+                                return updated;
+                            });
+                        } else if (data.type === 'pdf_ready') {
+                            setPdfUrl(data.pdf_path);
+                        }
+                    } catch (e) {}
+                }
+            }
+        } catch (e) {
+            setMessages(prev => [...prev, { role: 'assistant', content: '❌ Errore di connessione. Riprova.' }]);
+        }
+        setIsStreaming(false);
+    };
+
+    return (
+        <div className="flex flex-col h-[calc(100vh-140px)]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.length === 0 && (
+                    <div className="text-center py-20">
+                        <p className="text-2xl mb-2">💬</p>
+                        <p className="text-gray-400">Ciao Tania! Sono il tuo assistente BI di TDS.</p>
+                        <p className="text-gray-500 text-sm mt-1">Chiedimi di analizzare promozioni, confrontare competitor, o generare report PDF.</p>
+                    </div>
+                )}
+                {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
+                            msg.role === 'user'
+                                ? 'bg-google-blue text-white rounded-br-md'
+                                : 'bg-gray-800 text-gray-100 rounded-bl-md'
+                        }`}>
+                            {msg.content}
+                        </div>
+                    </div>
+                ))}
+                {isStreaming && (
+                    <div className="flex justify-start">
+                        <div className="typing-indicator bg-gray-800 rounded-2xl px-4 py-3">
+                            <span></span> <span></span> <span></span>
+                        </div>
+                    </div>
+                )}
+                {pdfUrl && (
+                    <div className="flex justify-start">
+                        <a href={`/api/reports/download/latest`} className="bg-google-green/20 text-google-green rounded-xl px-4 py-2 text-sm hover:bg-google-green/30 transition-colors">
+                            📄 Scarica PDF
+                        </a>
+                    </div>
+                )}
+                <div ref={chatEndRef} />
+            </div>
+
+            <div className="border-t border-gray-800 p-4">
+                <div className="flex gap-2 max-w-4xl mx-auto">
+                    <input
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                        placeholder="Scrivi un messaggio..."
+                        className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:border-google-blue outline-none"
+                        disabled={isStreaming}
+                    />
+                    <button onClick={sendMessage} disabled={!input.trim() || isStreaming}
+                        className="bg-google-blue hover:bg-blue-600 disabled:bg-gray-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium">
+                        Invia
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ========================
+// TAB 4: Report & Storico
+// ========================
+function ReportTab() {
+    const [reports, setReports] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        (async () => {
+            try { setReports(await api.get('/api/reports')); } catch (e) { console.error(e); }
+            setLoading(false);
+        })();
+    }, []);
+
+    const nextFriday = () => {
+        const d = new Date();
+        d.setDate(d.getDate() + ((5 - d.getDay() + 7) % 7 || 7));
+        return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    };
+
+    return (
+        <div>
+            <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700">
+                <p className="text-sm text-gray-300">📅 Prossimo report automatico: <span className="text-google-blue font-medium">venerdì {nextFriday()} ore 08:00</span></p>
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-gray-800">
+                <table className="w-full text-xs">
+                    <thead className="bg-gray-800/80">
+                        <tr>
+                            <th className="text-left px-3 py-2">Tipo</th>
+                            <th className="text-left px-3 py-2">Titolo</th>
+                            <th className="text-left px-3 py-2">Settimana</th>
+                            <th className="text-left px-3 py-2">Generato il</th>
+                            <th className="text-left px-3 py-2">Generato da</th>
+                            <th className="text-center px-3 py-2">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan={6} className="text-center py-8 text-gray-500">Caricamento...</td></tr>
+                        ) : reports.length === 0 ? (
+                            <tr><td colSpan={6} className="text-center py-8 text-gray-500">Nessun report generato. Il primo verrà creato automaticamente venerdì.</td></tr>
+                        ) : reports.map(r => (
+                            <tr key={r.id} className="border-t border-gray-800/50 hover:bg-gray-800/30">
+                                <td className="px-3 py-2"><Badge color={r.type === 'weekly' ? 'blue' : 'green'}>{r.type}</Badge></td>
+                                <td className="px-3 py-2">{r.title}</td>
+                                <td className="px-3 py-2 text-gray-400">{r.settimana}</td>
+                                <td className="px-3 py-2 text-gray-400">{new Date(r.generated_at).toLocaleString('it-IT')}</td>
+                                <td className="px-3 py-2 text-gray-400">{r.generated_by}</td>
+                                <td className="px-3 py-2 text-center">
+                                    <a href={`/api/reports/download/${r.id}`} className="text-google-blue hover:underline">⬇️ Scarica PDF</a>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+// ========================
+// TAB 5: Sistema
+// ========================
+function SistemaTab() {
+    const [status, setStatus] = useState(null);
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const [s, l] = await Promise.all([api.get('/api/system/status'), api.get('/api/system/logs?limit=30')]);
+            setStatus(s);
+            setLogs(l);
+        } catch (e) { console.error(e); }
+        setLoading(false);
+    };
+
+    const triggerFullScrape = async () => {
+        if (!confirm('Avviare scraping completo per tutti i prodotti?')) return;
+        try {
+            const res = await api.post('/api/scrape/full', {});
+            alert(res.message);
+        } catch (e) { alert('Errore: ' + e.message); }
+    };
+
+    const markEol = async (productId) => {
+        try {
+            await api.post(`/api/system/mark-eol/${productId}`, {});
+            loadData();
+        } catch (e) { alert('Errore: ' + e.message); }
+    };
+
+    if (loading) return <div className="text-center py-10 text-gray-500">Caricamento...</div>;
+
+    return (
+        <div className="space-y-6">
+            {status && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <div className="text-2xl font-bold text-google-blue">{status.total_products_monitored}</div>
+                        <div className="text-xs text-gray-400">Prodotti monitorati</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <div className="text-2xl font-bold text-google-green">{status.google_products}</div>
+                        <div className="text-xs text-gray-400">Prodotti Google</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <div className="text-2xl font-bold text-google-yellow">{status.competitor_products}</div>
+                        <div className="text-xs text-gray-400">Competitor</div>
+                    </div>
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                        <div className="text-2xl font-bold text-white">{status.retailers?.length || 3}</div>
+                        <div className="text-xs text-gray-400">Retailer attivi</div>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex items-center gap-3">
+                <button onClick={triggerFullScrape} className="bg-google-blue hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                    ▶️ Avvia scraping manuale completo
+                </button>
+                <button onClick={loadData} className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm">🔄 Aggiorna</button>
+                {status?.last_scrape && <span className="text-xs text-gray-400">Ultimo scraping: {new Date(status.last_scrape).toLocaleString('it-IT')}</span>}
+            </div>
+
+            {status?.alerts?.length > 0 && (
+                <div className="bg-red-900/20 border border-red-800 rounded-lg p-4">
+                    <h3 className="text-sm font-bold text-google-red mb-2">⚠️ Prodotti con streak non trovato ≥ 3</h3>
+                    <div className="space-y-2">
+                        {status.alerts.map(a => (
+                            <div key={a.product_id} className="flex items-center justify-between bg-red-900/30 rounded px-3 py-2 text-xs">
+                                <span><strong>{a.brand} {a.model}</strong> — non trovato da <Badge color="red">{a.not_found_streak} settimane</Badge></span>
+                                <button onClick={() => markEol(a.product_id)} className="text-google-yellow hover:underline text-xs">Segna EOL</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div>
+                <h3 className="text-sm font-bold mb-2 text-gray-300">📋 Log Scraping Recenti</h3>
+                <div className="overflow-x-auto rounded-lg border border-gray-800 max-h-96 overflow-y-auto">
+                    <table className="w-full text-xs">
+                        <thead className="bg-gray-800/80 sticky top-0">
+                            <tr>
+                                <th className="text-left px-3 py-2">Prodotto</th>
+                                <th className="text-left px-3 py-2">Retailer</th>
+                                <th className="text-center px-3 py-2">Status</th>
+                                <th className="text-left px-3 py-2">Errore</th>
+                                <th className="text-left px-3 py-2">Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {logs.map(l => (
+                                <tr key={l.id} className="border-t border-gray-800/50">
+                                    <td className="px-3 py-1.5">{l.product}</td>
+                                    <td className="px-3 py-1.5 capitalize">{l.retailer}</td>
+                                    <td className="px-3 py-1.5 text-center">
+                                        {l.status === 'found' ? <Badge color="green">found</Badge> :
+                                         l.status === 'error' ? <Badge color="red">error</Badge> :
+                                         <Badge color="gray">not found</Badge>}
+                                    </td>
+                                    <td className="px-3 py-1.5 text-gray-500 truncate max-w-xs">{l.error_message || '—'}</td>
+                                    <td className="px-3 py-1.5 text-gray-400">{new Date(l.scraped_at).toLocaleString('it-IT')}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ========================
+// App Root
+// ========================
+function App() {
+    const [activeTab, setActiveTab] = useState('promozioni');
+
+    return (
+        <div className="min-h-screen">
+            <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+            <main className="max-w-[1600px] mx-auto p-4">
+                {activeTab === 'promozioni' && <PromozioniTab />}
+                {activeTab === 'catalogo' && <CatalogoTab />}
+                {activeTab === 'chat' && <ChatTab />}
+                {activeTab === 'report' && <ReportTab />}
+                {activeTab === 'sistema' && <SistemaTab />}
+            </main>
+            <footer className="text-center py-4 text-xs text-gray-600 border-t border-gray-800">
+                TDS — Tech Deep Search | © React SRL | Dati: Euronics, Unieuro, MediaWorld
+            </footer>
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

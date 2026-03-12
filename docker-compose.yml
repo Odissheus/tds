@@ -1,0 +1,84 @@
+services:
+  app:
+    build: .
+    container_name: tds-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://tds:password@postgres:5432/tds
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - reports_data:/data/reports
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/api/health'); r.raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  celery-worker:
+    build: .
+    container_name: tds-celery
+    restart: unless-stopped
+    command: celery -A backend.celery_app:celery_app worker --loglevel=info --concurrency=2
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://tds:password@postgres:5432/tds
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - reports_data:/data/reports
+    healthcheck:
+      test: ["CMD", "celery", "-A", "backend.celery_app:celery_app", "inspect", "ping"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tds-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tds
+      POSTGRES_USER: tds
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tds -d tds"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: tds-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:
+  reports_data:

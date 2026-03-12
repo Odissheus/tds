@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            color: #333;
+            font-size: 11pt;
+            line-height: 1.5;
+            padding: 30px 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #4285F4;
+        }
+        .header h1 {
+            font-size: 28pt;
+            font-weight: 700;
+            color: #4285F4;
+            margin-bottom: 5px;
+        }
+        .header .subtitle {
+            font-size: 12pt;
+            color: #666;
+        }
+        .header .brand {
+            font-size: 10pt;
+            color: #999;
+            margin-top: 3px;
+        }
+        .header .period {
+            font-size: 11pt;
+            color: #333;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .greeting {
+            background: #f0f7ff;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #4285F4;
+            font-size: 11pt;
+        }
+
+        h2 {
+            color: #4285F4;
+            font-size: 14pt;
+            margin: 25px 0 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        h2.google { color: #34A853; border-bottom-color: #34A853; }
+        h2.competitor { color: #EA4335; border-bottom-color: #EA4335; }
+        h2.eol { color: #FBBC05; border-bottom-color: #FBBC05; }
+        h2.insight { color: #4285F4; border-bottom-color: #4285F4; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0 20px;
+            font-size: 9pt;
+        }
+        th {
+            background: #f5f5f5;
+            color: #333;
+            font-weight: 600;
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+        tr:nth-child(even) { background: #fafafa; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 8pt;
+            font-weight: 600;
+        }
+        .badge-green {
+            background: #e6f4ea;
+            color: #34A853;
+        }
+        .badge-orange {
+            background: #fef3e0;
+            color: #F57C00;
+        }
+        .badge-eol {
+            background: #fff8e1;
+            color: #F9A825;
+        }
+        .badge-red {
+            background: #fce8e6;
+            color: #EA4335;
+        }
+
+        .insight-block {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            line-height: 1.7;
+        }
+
+        .chart-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            font-size: 9pt;
+            color: #999;
+        }
+
+        .no-data {
+            color: #999;
+            font-style: italic;
+            padding: 10px;
+        }
+
+        a { color: #4285F4; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>TDS — Tech Deep Search</h1>
+    <div class="subtitle">Report Settimanale Monitoraggio Promozioni</div>
+    <div class="brand">© React SRL</div>
+    <div class="period">Settimana {{ week }} | {{ monday }} — {{ sunday }}</div>
+    <div class="brand">Generato il {{ generated_at }}</div>
+</div>
+
+<div class="greeting">
+    Ciao Tania, per questa settimana (da lunedì {{ monday_short }} a domenica {{ sunday_short }}) ecco il riepilogo delle promozioni rilevate sui volantini di Euronics, Unieuro e MediaWorld.
+</div>
+
+<!-- SEZIONE 1: Google Pixel Smartphone -->
+<h2 class="google">📱 Sezione 1 — Google Pixel Smartphone</h2>
+{% if google_smartphone %}
+<table>
+    <thead>
+        <tr>
+            <th>Modello</th>
+            <th>Retailer</th>
+            <th>Prezzo Orig.</th>
+            <th>Prezzo Promo</th>
+            <th>Sconto</th>
+            <th>Validità</th>
+            <th>Fonte</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in google_smartphone %}
+        <tr>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.retailer }}{% if p.retailer_variant %} ({{ p.retailer_variant }}){% endif %}</td>
+            <td>€{{ "%.2f"|format(p.prezzo_originale) }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>
+                {% if p.sconto_percentuale >= 20 %}
+                <span class="badge badge-green">-{{ "%.1f"|format(p.sconto_percentuale) }}%</span>
+                {% else %}
+                -{{ "%.1f"|format(p.sconto_percentuale) }}%
+                {% endif %}
+            </td>
+            <td>{{ p.data_inizio }}{% if p.data_fine %} — {{ p.data_fine }}{% endif %}</td>
+            <td><a href="{{ p.url_fonte }}">Link</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessuna promozione Pixel smartphone rilevata questa settimana.</p>
+{% endif %}
+
+<!-- SEZIONE 2: Google Pixel Earable, Wearable & Accessori -->
+<h2 class="google">🎧 Sezione 2 — Google Pixel Earable, Wearable & Accessori</h2>
+{% if google_earable_wearable %}
+<table>
+    <thead>
+        <tr>
+            <th>Modello</th>
+            <th>Categoria</th>
+            <th>Retailer</th>
+            <th>Prezzo Orig.</th>
+            <th>Prezzo Promo</th>
+            <th>Sconto</th>
+            <th>Fonte</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in google_earable_wearable %}
+        <tr>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.category }}</td>
+            <td>{{ p.retailer }}</td>
+            <td>€{{ "%.2f"|format(p.prezzo_originale) }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>
+                {% if p.sconto_percentuale >= 20 %}
+                <span class="badge badge-green">-{{ "%.1f"|format(p.sconto_percentuale) }}%</span>
+                {% else %}
+                -{{ "%.1f"|format(p.sconto_percentuale) }}%
+                {% endif %}
+            </td>
+            <td><a href="{{ p.url_fonte }}">Link</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessuna promozione Pixel earable/wearable/accessori rilevata.</p>
+{% endif %}
+
+<!-- SEZIONE 3: Bundle Rilevati -->
+<h2 class="google">📦 Sezione 3 — Bundle Rilevati</h2>
+{% if google_bundles %}
+<table>
+    <thead>
+        <tr><th>Modello</th><th>Retailer</th><th>Prezzo Promo</th><th>Sconto</th><th>Fonte</th></tr>
+    </thead>
+    <tbody>
+    {% for p in google_bundles %}
+        <tr>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.retailer }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>-{{ "%.1f"|format(p.sconto_percentuale) }}%</td>
+            <td><a href="{{ p.url_fonte }}">Link</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessun bundle rilevato questa settimana.</p>
+{% endif %}
+
+<!-- SEZIONE 4: Competitor Smartphone -->
+<h2 class="competitor">📊 Sezione 4 — Competitor Smartphone</h2>
+{% if comp_smartphone %}
+<table>
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Modello</th>
+            <th>Retailer</th>
+            <th>Prezzo Orig.</th>
+            <th>Prezzo Promo</th>
+            <th>Sconto</th>
+            <th>Fascia</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in comp_smartphone %}
+        <tr>
+            <td>{{ p.brand }}</td>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.retailer }}</td>
+            <td>€{{ "%.2f"|format(p.prezzo_originale) }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>
+                {% if p.sconto_percentuale >= 15 %}
+                <span class="badge badge-orange">🔥 -{{ "%.1f"|format(p.sconto_percentuale) }}%</span>
+                {% else %}
+                -{{ "%.1f"|format(p.sconto_percentuale) }}%
+                {% endif %}
+            </td>
+            <td>
+                {% if p.prezzo_promo < 300 %}Budget
+                {% elif p.prezzo_promo < 600 %}Mid
+                {% elif p.prezzo_promo < 900 %}High
+                {% else %}Premium{% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessuna promozione competitor smartphone rilevata.</p>
+{% endif %}
+
+<!-- SEZIONE 5: Competitor Earable & Wearable -->
+<h2 class="competitor">🎧 Sezione 5 — Competitor Earable & Wearable</h2>
+{% if comp_earable_wearable %}
+<table>
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Modello</th>
+            <th>Categoria</th>
+            <th>Retailer</th>
+            <th>Prezzo Promo</th>
+            <th>Sconto</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in comp_earable_wearable %}
+        <tr>
+            <td>{{ p.brand }}</td>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.category }}</td>
+            <td>{{ p.retailer }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>-{{ "%.1f"|format(p.sconto_percentuale) }}%</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessuna promozione competitor earable/wearable rilevata.</p>
+{% endif %}
+
+<!-- SEZIONE 6: EOL in Promozione -->
+<h2 class="eol">⚠️ Sezione 6 — Prodotti EOL in Promozione</h2>
+{% if eol_promos %}
+<table>
+    <thead>
+        <tr>
+            <th>Brand</th>
+            <th>Modello</th>
+            <th>Retailer</th>
+            <th>Prezzo Promo</th>
+            <th>Sconto</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for p in eol_promos %}
+        <tr>
+            <td>{{ p.brand }}</td>
+            <td><strong>{{ p.model }}</strong></td>
+            <td>{{ p.retailer }}</td>
+            <td><strong>€{{ "%.2f"|format(p.prezzo_promo) }}</strong></td>
+            <td>-{{ "%.1f"|format(p.sconto_percentuale) }}%</td>
+            <td><span class="badge badge-eol">⚠️ EOL in promo</span></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="no-data">Nessun prodotto EOL rilevato in promozione.</p>
+{% endif %}
+
+<!-- SEZIONE 7: Insight Strategici -->
+<h2 class="insight">💡 Sezione 7 — Insight Strategici</h2>
+{% if analysis %}
+    {% if analysis.get('insights') %}
+    <div class="insight-block">{{ analysis.insights }}</div>
+    {% endif %}
+
+    {% if analysis.get('pixel_smartphone') and analysis.pixel_smartphone != analysis.get('insights', '') %}
+    <h3 style="color:#34A853; margin-top:15px;">Pixel Smartphone</h3>
+    <div class="insight-block">{{ analysis.pixel_smartphone }}</div>
+    {% endif %}
+
+    {% if analysis.get('competitor_smartphone') %}
+    <h3 style="color:#EA4335; margin-top:15px;">Competitor Smartphone</h3>
+    <div class="insight-block">{{ analysis.competitor_smartphone }}</div>
+    {% endif %}
+{% else %}
+<p class="no-data">Insight non disponibili per questa settimana.</p>
+{% endif %}
+
+<!-- GRAFICI -->
+{% if price_chart_b64 %}
+<h2>📈 Prezzi Promo: Pixel vs Competitor</h2>
+<div class="chart-container">
+    <img src="data:image/png;base64,{{ price_chart_b64 }}" alt="Grafico prezzi">
+</div>
+{% endif %}
+
+{% if trend_chart_b64 %}
+<h2>📉 Trend Sconti Google Pixel</h2>
+<div class="chart-container">
+    <img src="data:image/png;base64,{{ trend_chart_b64 }}" alt="Trend sconti">
+</div>
+{% endif %}
+
+<div class="footer">
+    <strong>TDS Tech Deep Search</strong> — Report generato automaticamente da React SRL<br>
+    Dati rilevati su: Euronics, Unieuro, MediaWorld<br>
+    © React SRL — Tutti i diritti riservati
+</div>
+
+</body>
+</html>
