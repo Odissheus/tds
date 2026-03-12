@@ -13,191 +13,181 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
-            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        'g-blue': '#4285F4',
-                        'g-green': '#34A853',
-                        'g-yellow': '#FBBC05',
-                        'g-red': '#EA4335',
-                        'surface': '#0f1117',
-                        'surface-2': '#161822',
-                        'surface-3': '#1e2030',
-                        'surface-4': '#272a3a',
-                        'border-subtle': '#2a2d3e',
+                        'brand': '#2563EB',
+                        'brand-light': '#3B82F6',
+                        'brand-50': '#EFF6FF',
+                        'g-green': '#16A34A',
+                        'g-green-50': '#F0FDF4',
+                        'g-yellow': '#CA8A04',
+                        'g-yellow-50': '#FEFCE8',
+                        'g-red': '#DC2626',
+                        'g-red-50': '#FEF2F2',
+                        'g-orange': '#EA580C',
+                        'g-orange-50': '#FFF7ED',
+                        'surface': '#F8FAFC',
+                        'surface-2': '#F1F5F9',
+                        'txt': '#1E293B',
+                        'txt-2': '#475569',
+                        'txt-3': '#94A3B8',
+                        'brd': '#E2E8F0',
+                        'brd-light': '#F1F5F9',
                     },
-                    fontFamily: { 'sans': ['Inter', 'sans-serif'] },
+                    fontFamily: { 'sans': ['Inter', 'system-ui', 'sans-serif'] },
+                    boxShadow: {
+                        'card': '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+                        'card-hover': '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)',
+                        'modal': '0 20px 60px rgba(0,0,0,0.15)',
+                    }
                 }
             }
         }
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e2e4ed; }
-
-        /* Glassmorphism */
-        .glass { background: rgba(30, 32, 48, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); }
-        .glass-strong { background: rgba(30, 32, 48, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08); }
-
-        /* Tab transitions */
-        .tab-content { animation: fadeSlide 0.3s ease-out; }
-        @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Sidebar hover */
-        .nav-item { transition: all 0.2s ease; }
-        .nav-item:hover { background: rgba(66, 133, 244, 0.1); }
-        .nav-item.active { background: rgba(66, 133, 244, 0.15); border-right: 3px solid #4285F4; }
-
-        /* Table rows */
-        .tbl-row { transition: background 0.15s ease; }
-        .tbl-row:hover { background: rgba(66, 133, 244, 0.05) !important; }
-
-        /* Typing animation */
-        .typing span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #4285F4; animation: bounce 1.4s infinite; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #F8FAFC; color: #1E293B; }
+        .tab-content { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-item { transition: all 0.15s ease; }
+        .nav-item:hover { background: #F1F5F9; }
+        .nav-item.active { background: #EFF6FF; color: #2563EB; border-right: 3px solid #2563EB; }
+        .tbl-row { transition: background 0.1s ease; }
+        .tbl-row:hover { background: #F8FAFC !important; }
+        .typing span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2563EB; animation: bounce 1.4s infinite; }
         .typing span:nth-child(2) { animation-delay: 0.2s; }
         .typing span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
-
-        /* Glow card */
-        .glow-blue { box-shadow: 0 0 20px rgba(66,133,244,0.12); }
-        .glow-green { box-shadow: 0 0 20px rgba(52,168,83,0.12); }
-        .glow-red { box-shadow: 0 0 20px rgba(234,67,53,0.12); }
-        .glow-yellow { box-shadow: 0 0 20px rgba(251,188,5,0.12); }
-
-        /* Scrollbar */
+        @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.3} 30%{transform:translateY(-5px);opacity:1} }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #2a2d3e; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4285F4; }
-
-        /* Pulse dot */
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         .pulse-dot { animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     </style>
 </head>
-<body class="dark">
+<body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect, useRef, useCallback, useMemo } = React;
-const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } = Recharts;
+const { useState, useEffect, useRef, useMemo } = React;
+const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } = Recharts;
 
-/* ====== API ====== */
 const api = {
-    get: async (u) => { const r = await fetch(u); if (!r.ok) throw new Error(r.status); return r.json(); },
-    post: async (u, d) => { const r = await fetch(u, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) }); if (!r.ok) throw new Error(r.status); return r.json(); },
-    patch: async (u, d) => { const r = await fetch(u, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) }); if (!r.ok) throw new Error(r.status); return r.json(); },
+    get: async u => { const r = await fetch(u); if(!r.ok) throw new Error(r.status); return r.json(); },
+    post: async (u,d) => { const r = await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); if(!r.ok) throw new Error(r.status); return r.json(); },
+    patch: async (u,d) => { const r = await fetch(u,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}); if(!r.ok) throw new Error(r.status); return r.json(); },
 };
 
-/* ====== Badges ====== */
-function Badge({children, color='blue', size='sm'}) {
+/* ── Badges ── */
+function Badge({children, color='blue'}) {
     const c = {
-        blue:'bg-g-blue/15 text-g-blue ring-g-blue/20', green:'bg-g-green/15 text-g-green ring-g-green/20',
-        yellow:'bg-g-yellow/15 text-g-yellow ring-g-yellow/20', red:'bg-g-red/15 text-g-red ring-g-red/20',
-        gray:'bg-gray-700/50 text-gray-400 ring-gray-600/20', orange:'bg-orange-500/15 text-orange-400 ring-orange-500/20',
-        purple:'bg-purple-500/15 text-purple-400 ring-purple-500/20',
+        blue:'bg-brand-50 text-brand border-blue-200', green:'bg-g-green-50 text-g-green border-green-200',
+        yellow:'bg-g-yellow-50 text-g-yellow border-yellow-200', red:'bg-g-red-50 text-g-red border-red-200',
+        gray:'bg-gray-100 text-gray-500 border-gray-200', orange:'bg-g-orange-50 text-g-orange border-orange-200',
+        purple:'bg-purple-50 text-purple-600 border-purple-200',
     };
-    const s = size === 'xs' ? 'px-1.5 py-0 text-[10px]' : 'px-2 py-0.5 text-[11px]';
-    return <span className={`inline-flex items-center rounded-full font-medium ring-1 ring-inset ${s} ${c[color]||c.blue}`}>{children}</span>;
+    return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${c[color]||c.blue}`}>{children}</span>;
 }
 function CatBadge({cat}) { const m={smartphone:'blue',earable:'green',wearable:'yellow',accessory:'gray',bundle:'orange'}; return <Badge color={m[cat]||'gray'}>{cat}</Badge>; }
 function TierBadge({t}) { return <Badge color={t===1?'blue':'gray'}>T{t}</Badge>; }
 function StatusBadge({s}) { const m={active:'green',eol:'yellow',disabled:'red'}; return <Badge color={m[s]||'gray'}>{s}</Badge>; }
-function PromoTagBadge({tag}) { if(!tag) return null; const m={'Offerta Lampo':'red','Coupon':'green','Black Friday':'purple','Prime Deal':'blue','Spring Deal':'green','Sconto Amazon':'orange','Offerta del giorno':'yellow'}; return <Badge color={m[tag]||'purple'} size="xs">{tag}</Badge>; }
+function PromoTagBadge({tag}) { if(!tag) return null; const m={'Offerta Lampo':'red','Coupon':'green','Black Friday':'purple','Prime Deal':'blue','Spring Deal':'green','Sconto Amazon':'orange','Offerta del giorno':'yellow'}; return <Badge color={m[tag]||'purple'}>{tag}</Badge>; }
 
-/* ====== MultiSelect ====== */
+/* ── MultiSelect ── */
 function MultiSelect({label, options, selected, onChange}) {
     const [open, setOpen] = useState(false);
     const ref = useRef(null);
-    useEffect(() => { const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h); }, []);
+    useEffect(()=>{ const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false)}; document.addEventListener('mousedown',h); return()=>document.removeEventListener('mousedown',h); },[]);
     return (
         <div className="relative" ref={ref}>
-            <button onClick={() => setOpen(!open)} className="glass rounded-lg px-3 py-1.5 text-xs flex items-center gap-1.5 hover:border-g-blue/40 transition-all">
-                {label} {selected.length > 0 && <span className="bg-g-blue/20 text-g-blue rounded-full px-1.5 text-[10px] font-bold">{selected.length}</span>}
-                <svg className={`w-3 h-3 transition-transform ${open?'rotate-180':''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+            <button onClick={()=>setOpen(!open)} className="bg-white border border-brd rounded-lg px-3 py-1.5 text-xs flex items-center gap-1.5 hover:border-brand/40 transition-colors shadow-sm">
+                <span className="text-txt-2">{label}</span>
+                {selected.length>0 && <span className="bg-brand-50 text-brand rounded-full px-1.5 text-[10px] font-bold">{selected.length}</span>}
+                <svg className={`w-3 h-3 text-txt-3 transition-transform ${open?'rotate-180':''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
             </button>
-            {open && <div className="absolute top-full mt-1 glass-strong rounded-lg shadow-2xl z-30 min-w-[170px] py-1">
-                {options.map(o => <label key={o} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-white/5 cursor-pointer"><input type="checkbox" checked={selected.includes(o)} onChange={() => onChange(selected.includes(o)?selected.filter(s=>s!==o):[...selected,o])} className="rounded border-gray-600 bg-transparent text-g-blue focus:ring-g-blue/30" />{o}</label>)}
-                {selected.length>0 && <button onClick={()=>onChange([])} className="w-full text-[10px] text-g-red px-3 py-1 hover:bg-white/5 border-t border-border-subtle mt-1">Pulisci filtri</button>}
+            {open && <div className="absolute top-full mt-1 bg-white border border-brd rounded-lg shadow-card-hover z-30 min-w-[170px] py-1">
+                {options.map(o=><label key={o} className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-2 cursor-pointer text-txt-2"><input type="checkbox" checked={selected.includes(o)} onChange={()=>onChange(selected.includes(o)?selected.filter(s=>s!==o):[...selected,o])} className="rounded border-gray-300 text-brand focus:ring-brand/30"/>{o}</label>)}
+                {selected.length>0 && <button onClick={()=>onChange([])} className="w-full text-[10px] text-g-red px-3 py-1 hover:bg-g-red-50 border-t border-brd mt-1">Pulisci</button>}
             </div>}
         </div>
     );
 }
 
-/* ====== Stat Card (Glassmorphism) ====== */
+/* ── Stat Card ── */
 function StatCard({icon, value, label, color='blue', sub}) {
-    const glows = {blue:'glow-blue', green:'glow-green', red:'glow-red', yellow:'glow-yellow'};
-    const bgs = {blue:'from-g-blue/10', green:'from-g-green/10', red:'from-g-red/10', yellow:'from-g-yellow/10'};
-    const texts = {blue:'text-g-blue', green:'text-g-green', red:'text-g-red', yellow:'text-g-yellow'};
+    const accents = {blue:'border-l-brand', green:'border-l-g-green', red:'border-l-g-red', yellow:'border-l-g-yellow'};
+    const texts = {blue:'text-brand', green:'text-g-green', red:'text-g-red', yellow:'text-g-yellow'};
     return (
-        <div className={`glass rounded-xl p-5 ${glows[color]} bg-gradient-to-br ${bgs[color]} to-transparent`}>
+        <div className={`bg-white rounded-xl p-5 shadow-card hover:shadow-card-hover transition-shadow border-l-4 ${accents[color]}`}>
             <div className="flex items-start justify-between">
                 <div>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</p>
+                    <p className="text-[11px] text-txt-3 uppercase tracking-wider font-medium">{label}</p>
                     <p className={`text-3xl font-bold mt-1 ${texts[color]}`}>{value}</p>
-                    {sub && <p className="text-[11px] text-gray-500 mt-1">{sub}</p>}
+                    {sub && <p className="text-[11px] text-txt-3 mt-1">{sub}</p>}
                 </div>
-                <span className="text-2xl opacity-60">{icon}</span>
+                <span className="text-2xl opacity-50">{icon}</span>
             </div>
         </div>
     );
 }
 
-/* ====== SIDEBAR ====== */
+/* ── Sidebar ── */
 function Sidebar({active, setActive}) {
     const [time, setTime] = useState(new Date());
-    useEffect(() => { const t = setInterval(()=>setTime(new Date()), 1000); return ()=>clearInterval(t); }, []);
+    useEffect(()=>{ const t=setInterval(()=>setTime(new Date()),1000); return()=>clearInterval(t); },[]);
     const items = [
-        {id:'promozioni', icon:'📊', label:'Promozioni Live'},
-        {id:'catalogo', icon:'📱', label:'Catalogo'},
-        {id:'chat', icon:'💬', label:'Chat Analyst'},
-        {id:'report', icon:'📄', label:'Report & Storico'},
-        {id:'sistema', icon:'⚙️', label:'Sistema'},
+        {id:'promozioni',icon:'📊',label:'Promozioni Live'},
+        {id:'catalogo',icon:'📱',label:'Catalogo'},
+        {id:'chat',icon:'💬',label:'Chat Analyst'},
+        {id:'report',icon:'📄',label:'Report & Storico'},
+        {id:'sistema',icon:'⚙️',label:'Sistema'},
     ];
     return (
-        <aside className="fixed left-0 top-0 bottom-0 w-64 glass-strong z-40 flex flex-col border-r border-border-subtle">
-            {/* Logo */}
-            <div className="p-5 border-b border-border-subtle">
-                <div className="flex items-center gap-3">
-                    <img src="/static/logo.jpg" alt="TDS" className="w-10 h-10 rounded-lg object-contain bg-white/5 p-0.5" />
-                    <div>
-                        <h1 className="text-base font-bold leading-tight"><span className="text-g-blue">TDS</span> <span className="text-gray-300 font-normal">Tech Deep Search</span></h1>
-                        <p className="text-[10px] text-gray-500">© React SRL</p>
-                    </div>
+        <aside className="fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-brd z-40 flex flex-col">
+            {/* Logo — large, centered */}
+            <div className="px-6 pt-8 pb-6 border-b border-brd-light">
+                <div className="flex flex-col items-center text-center">
+                    <img src="/static/logo.jpg" alt="TDS" className="w-20 h-20 rounded-2xl object-contain shadow-card mb-3" />
+                    <h1 className="text-base font-bold leading-tight">
+                        <span className="text-brand">TDS</span>
+                        <span className="text-txt-2 font-medium"> Tech Deep Search</span>
+                    </h1>
+                    <p className="text-[10px] text-txt-3 mt-0.5">© React SRL</p>
                 </div>
             </div>
 
-            {/* Time */}
-            <div className="px-5 py-3 border-b border-border-subtle">
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest">Data e ora</p>
-                <p className="text-xs text-gray-300 mt-0.5">{time.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</p>
-                <p className="text-lg font-mono text-g-blue font-semibold">{time.toLocaleTimeString('it-IT')}</p>
+            {/* Clock */}
+            <div className="px-5 py-3 border-b border-brd-light">
+                <p className="text-[10px] text-txt-3 uppercase tracking-widest font-medium">Data e ora</p>
+                <p className="text-xs text-txt-2 mt-0.5">{time.toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</p>
+                <p className="text-lg font-mono text-brand font-semibold tracking-tight">{time.toLocaleTimeString('it-IT')}</p>
             </div>
 
             {/* Nav */}
             <nav className="flex-1 py-3">
-                {items.map(i => (
+                {items.map(i=>(
                     <button key={i.id} onClick={()=>setActive(i.id)}
-                        className={`nav-item w-full flex items-center gap-3 px-5 py-3 text-sm text-left ${active===i.id ? 'active text-g-blue font-medium' : 'text-gray-400 hover:text-gray-200'}`}>
+                        className={`nav-item w-full flex items-center gap-3 px-5 py-3 text-sm text-left ${active===i.id?'active font-medium':'text-txt-2 hover:text-txt'}`}>
                         <span className="text-lg">{i.icon}</span>{i.label}
                     </button>
                 ))}
             </nav>
 
             {/* Status */}
-            <div className="p-5 border-t border-border-subtle">
+            <div className="p-5 border-t border-brd-light">
                 <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-g-green pulse-dot"></span>
-                    <span className="text-[11px] text-gray-400">Sistema attivo</span>
+                    <span className="text-[11px] text-txt-3">Sistema attivo</span>
                 </div>
-                <p className="text-[10px] text-gray-600 mt-1">TDS v1.0 — React SRL</p>
+                <p className="text-[10px] text-txt-3/60 mt-1">TDS v1.0 — React SRL</p>
             </div>
         </aside>
     );
 }
 
-/* ====== TAB 1: PROMOZIONI LIVE ====== */
+/* ── TAB 1: PROMOZIONI ── */
 function PromozioniTab() {
     const [promos, setPromos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -206,122 +196,100 @@ function PromozioniTab() {
     const cats = ['smartphone','earable','wearable','accessory','bundle'];
     const rets = ['euronics','unieuro','mediaworld','amazon'];
 
-    useEffect(() => { load(); }, [f.week]);
-    const load = async () => {
-        setLoading(true);
-        try { let u='/api/promotions'; if(f.week) u+='?week='+f.week; setPromos(await api.get(u)); } catch(e) { console.error(e); }
-        setLoading(false);
-    };
+    useEffect(()=>{ load(); },[f.week]);
+    const load = async () => { setLoading(true); try { let u='/api/promotions'; if(f.week) u+='?week='+f.week; setPromos(await api.get(u)); } catch(e){} setLoading(false); };
     const filtered = promos.filter(p => {
-        if(f.brands.length && !f.brands.includes(p.brand)) return false;
-        if(f.categories.length && !f.categories.includes(p.category)) return false;
-        if(f.retailers.length && !f.retailers.includes(p.retailer)) return false;
-        if(f.tier!==null && p.tier!==f.tier) return false;
-        if(f.googleOnly && !p.is_google) return false;
+        if(f.brands.length&&!f.brands.includes(p.brand)) return false;
+        if(f.categories.length&&!f.categories.includes(p.category)) return false;
+        if(f.retailers.length&&!f.retailers.includes(p.retailer)) return false;
+        if(f.tier!==null&&p.tier!==f.tier) return false;
+        if(f.googleOnly&&!p.is_google) return false;
         return true;
     });
 
     const googlePromos = filtered.filter(p=>p.is_google);
-    const bestGoogleDiscount = googlePromos.length ? Math.max(...googlePromos.map(p=>p.sconto_percentuale)) : 0;
-    const competitorAlerts = filtered.filter(p=>!p.is_google && p.sconto_percentuale>=15).length;
+    const bestDiscount = googlePromos.length ? Math.max(...googlePromos.map(p=>p.sconto_percentuale)) : 0;
+    const compAlerts = filtered.filter(p=>!p.is_google&&p.sconto_percentuale>=15).length;
 
-    // Chart data
-    const chartData = useMemo(() => {
-        const byRetailer = {};
-        filtered.forEach(p => {
-            if(!byRetailer[p.retailer]) byRetailer[p.retailer] = {name: p.retailer, google:0, competitor:0, count:0};
-            if(p.is_google) byRetailer[p.retailer].google++;
-            else byRetailer[p.retailer].competitor++;
-            byRetailer[p.retailer].count++;
-        });
-        return Object.values(byRetailer);
-    }, [filtered]);
+    const chartData = useMemo(()=>{
+        const m={}; filtered.forEach(p=>{ if(!m[p.retailer]) m[p.retailer]={name:p.retailer,google:0,competitor:0}; if(p.is_google) m[p.retailer].google++; else m[p.retailer].competitor++; });
+        return Object.values(m);
+    },[filtered]);
 
     return (
         <div className="tab-content space-y-5">
-            {/* Summary cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard icon="📊" value={filtered.length} label="Promozioni settimana" color="blue" sub={`${googlePromos.length} Google, ${filtered.length-googlePromos.length} competitor`} />
-                <StatCard icon="🏷️" value={bestGoogleDiscount?`-${bestGoogleDiscount.toFixed(0)}%`:'—'} label="Miglior sconto Google" color="green" />
-                <StatCard icon="🔥" value={competitorAlerts} label="Alert competitor (>15%)" color="red" sub="Sconti aggressivi vs fascia Pixel" />
-                <StatCard icon="🏪" value={new Set(filtered.map(p=>p.retailer)).size} label="Retailer con offerte" color="yellow" sub="Euronics, Unieuro, MediaWorld, Amazon" />
+                <StatCard icon="📊" value={filtered.length} label="Promozioni settimana" color="blue" sub={`${googlePromos.length} Google, ${filtered.length-googlePromos.length} competitor`}/>
+                <StatCard icon="🏷️" value={bestDiscount?`-${bestDiscount.toFixed(0)}%`:'—'} label="Miglior sconto Google" color="green"/>
+                <StatCard icon="🔥" value={compAlerts} label="Alert competitor (>15%)" color="red" sub="Sconti aggressivi vs fascia Pixel"/>
+                <StatCard icon="🏪" value={new Set(filtered.map(p=>p.retailer)).size} label="Retailer con offerte" color="yellow"/>
             </div>
 
-            {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
-                <MultiSelect label="Brand" options={brands} selected={f.brands} onChange={v=>setF({...f,brands:v})} />
-                <MultiSelect label="Categoria" options={cats} selected={f.categories} onChange={v=>setF({...f,categories:v})} />
-                <MultiSelect label="Retailer" options={rets} selected={f.retailers} onChange={v=>setF({...f,retailers:v})} />
-                <button onClick={()=>setF({...f,tier:f.tier===1?null:1})} className={`glass rounded-lg px-3 py-1.5 text-xs transition-all ${f.tier===1?'!bg-g-blue/15 text-g-blue ring-1 ring-g-blue/30':'text-gray-400'}`}>Tier 1</button>
-                <button onClick={()=>setF({...f,googleOnly:!f.googleOnly})} className={`glass rounded-lg px-3 py-1.5 text-xs transition-all ${f.googleOnly?'!bg-g-green/15 text-g-green ring-1 ring-g-green/30':'text-gray-400'}`}>Solo Google</button>
-                <input type="text" placeholder="2026-W11" value={f.week} onChange={e=>setF({...f,week:e.target.value})} className="glass rounded-lg px-3 py-1.5 text-xs w-32 focus:ring-1 focus:ring-g-blue/40 outline-none bg-transparent" />
-                <button onClick={load} className="bg-g-blue/90 hover:bg-g-blue text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:shadow-lg hover:shadow-g-blue/20">Aggiorna</button>
+                <MultiSelect label="Brand" options={brands} selected={f.brands} onChange={v=>setF({...f,brands:v})}/>
+                <MultiSelect label="Categoria" options={cats} selected={f.categories} onChange={v=>setF({...f,categories:v})}/>
+                <MultiSelect label="Retailer" options={rets} selected={f.retailers} onChange={v=>setF({...f,retailers:v})}/>
+                <button onClick={()=>setF({...f,tier:f.tier===1?null:1})} className={`rounded-lg px-3 py-1.5 text-xs border transition-colors shadow-sm ${f.tier===1?'bg-brand-50 text-brand border-blue-200':'bg-white text-txt-3 border-brd'}`}>Tier 1</button>
+                <button onClick={()=>setF({...f,googleOnly:!f.googleOnly})} className={`rounded-lg px-3 py-1.5 text-xs border transition-colors shadow-sm ${f.googleOnly?'bg-g-green-50 text-g-green border-green-200':'bg-white text-txt-3 border-brd'}`}>Solo Google</button>
+                <input type="text" placeholder="2026-W11" value={f.week} onChange={e=>setF({...f,week:e.target.value})} className="bg-white border border-brd rounded-lg px-3 py-1.5 text-xs w-32 focus:ring-2 focus:ring-brand/20 focus:border-brand outline-none shadow-sm"/>
+                <button onClick={load} className="bg-brand hover:bg-brand-light text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-colors shadow-sm">Aggiorna</button>
             </div>
 
-            {/* Chart */}
-            {chartData.length > 0 && (
-                <div className="glass rounded-xl p-5">
-                    <h3 className="text-sm font-semibold text-gray-300 mb-3">Promozioni per Retailer</h3>
+            {chartData.length>0 && (
+                <div className="bg-white rounded-xl p-5 shadow-card">
+                    <h3 className="text-sm font-semibold text-txt mb-3">Promozioni per Retailer</h3>
                     <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={chartData} barGap={4}>
-                            <XAxis dataKey="name" tick={{fill:'#6b7280',fontSize:11}} axisLine={false} tickLine={false} />
-                            <YAxis tick={{fill:'#6b7280',fontSize:11}} axisLine={false} tickLine={false} />
-                            <Tooltip contentStyle={{background:'#1e2030',border:'1px solid #2a2d3e',borderRadius:'8px',fontSize:'12px',color:'#e2e4ed'}} />
-                            <Bar dataKey="google" name="Google" fill="#4285F4" radius={[4,4,0,0]} />
-                            <Bar dataKey="competitor" name="Competitor" fill="#EA4335" radius={[4,4,0,0]} />
+                            <XAxis dataKey="name" tick={{fill:'#64748B',fontSize:11}} axisLine={false} tickLine={false}/>
+                            <YAxis tick={{fill:'#64748B',fontSize:11}} axisLine={false} tickLine={false}/>
+                            <Tooltip contentStyle={{background:'#fff',border:'1px solid #E2E8F0',borderRadius:'8px',fontSize:'12px',boxShadow:'0 4px 12px rgba(0,0,0,0.08)'}}/>
+                            <Bar dataKey="google" name="Google" fill="#2563EB" radius={[4,4,0,0]}/>
+                            <Bar dataKey="competitor" name="Competitor" fill="#DC2626" radius={[4,4,0,0]}/>
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
             )}
 
-            {/* Table */}
-            {loading ? <div className="text-center py-16 text-gray-500">Caricamento promozioni...</div> : (
-                <div className="glass rounded-xl overflow-hidden">
+            {loading ? <div className="text-center py-16 text-txt-3">Caricamento promozioni...</div> : (
+                <div className="bg-white rounded-xl shadow-card overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-xs">
-                            <thead><tr className="bg-surface-3/80 border-b border-border-subtle">
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Brand</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Modello</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Cat.</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Retailer</th>
-                                <th className="text-right px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Originale</th>
-                                <th className="text-right px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Promo</th>
-                                <th className="text-right px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Sconto</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Tag</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Validità</th>
-                                <th className="text-center px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">Link</th>
+                            <thead><tr className="bg-surface-2 border-b border-brd">
+                                {['Brand','Modello','Cat.','Retailer','Originale','Promo','Sconto','Tag','Validità','Link'].map(h=>
+                                    <th key={h} className="text-left px-4 py-3 font-semibold text-txt-3 uppercase text-[10px] tracking-wider">{h}</th>
+                                )}
                             </tr></thead>
                             <tbody>
-                                {filtered.length===0 ? <tr><td colSpan={10} className="text-center py-12 text-gray-500">Nessuna promozione trovata</td></tr> :
-                                filtered.map((p,i) => (
-                                    <tr key={p.id||i} className={`tbl-row border-b border-border-subtle/50 ${i%2===0?'bg-transparent':'bg-white/[0.01]'}`}>
-                                        <td className="px-4 py-2.5 font-medium text-gray-200">{p.brand}</td>
-                                        <td className="px-4 py-2.5 text-gray-300">{p.model}</td>
+                                {filtered.length===0 ? <tr><td colSpan={10} className="text-center py-12 text-txt-3">Nessuna promozione trovata</td></tr> :
+                                filtered.map((p,i)=>(
+                                    <tr key={p.id||i} className={`tbl-row border-b border-brd-light ${i%2===0?'bg-white':'bg-surface/50'}`}>
+                                        <td className="px-4 py-2.5 font-medium text-txt">{p.brand}</td>
+                                        <td className="px-4 py-2.5 text-txt-2">{p.model}</td>
                                         <td className="px-4 py-2.5"><CatBadge cat={p.category}/></td>
-                                        <td className="px-4 py-2.5 capitalize text-gray-300">{p.retailer}{p.retailer_variant?` (${p.retailer_variant})`:''}</td>
-                                        <td className="px-4 py-2.5 text-right text-gray-500 line-through">€{p.prezzo_originale?.toFixed(2)}</td>
-                                        <td className="px-4 py-2.5 text-right font-bold text-white">€{p.prezzo_promo?.toFixed(2)}</td>
+                                        <td className="px-4 py-2.5 capitalize text-txt-2">{p.retailer}{p.retailer_variant?` (${p.retailer_variant})`:''}</td>
+                                        <td className="px-4 py-2.5 text-right text-txt-3 line-through">€{p.prezzo_originale?.toFixed(2)}</td>
+                                        <td className="px-4 py-2.5 text-right font-bold text-txt">€{p.prezzo_promo?.toFixed(2)}</td>
                                         <td className="px-4 py-2.5 text-right">
-                                            {p.sconto_percentuale>=20 ? <Badge color="green">-{p.sconto_percentuale?.toFixed(1)}%</Badge> :
-                                             !p.is_google && p.sconto_percentuale>=15 ? <Badge color="orange">🔥 -{p.sconto_percentuale?.toFixed(1)}%</Badge> :
-                                             <span className="text-gray-500">-{p.sconto_percentuale?.toFixed(1)}%</span>}
+                                            {p.sconto_percentuale>=20?<Badge color="green">-{p.sconto_percentuale?.toFixed(1)}%</Badge>:
+                                             !p.is_google&&p.sconto_percentuale>=15?<Badge color="orange">-{p.sconto_percentuale?.toFixed(1)}%</Badge>:
+                                             <span className="text-txt-3">-{p.sconto_percentuale?.toFixed(1)}%</span>}
                                         </td>
                                         <td className="px-4 py-2.5"><PromoTagBadge tag={p.promo_tag}/></td>
-                                        <td className="px-4 py-2.5 text-gray-500">{p.data_inizio}{p.data_fine?` — ${p.data_fine}`:''}</td>
-                                        <td className="px-4 py-2.5 text-center">{p.url_fonte && <a href={p.url_fonte} target="_blank" rel="noopener" className="text-g-blue hover:text-blue-300 transition-colors">🔗</a>}</td>
+                                        <td className="px-4 py-2.5 text-txt-3">{p.data_inizio}{p.data_fine?` — ${p.data_fine}`:''}</td>
+                                        <td className="px-4 py-2.5 text-center">{p.url_fonte&&<a href={p.url_fonte} target="_blank" rel="noopener" className="text-brand hover:text-brand-light transition-colors">🔗</a>}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-                    <div className="px-4 py-2.5 border-t border-border-subtle text-[11px] text-gray-500">{filtered.length} promozioni</div>
+                    <div className="px-4 py-2.5 border-t border-brd-light text-[11px] text-txt-3">{filtered.length} promozioni</div>
                 </div>
             )}
         </div>
     );
 }
 
-/* ====== TAB 2: CATALOGO ====== */
+/* ── TAB 2: CATALOGO ── */
 function CatalogoTab() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -335,128 +303,128 @@ function CatalogoTab() {
     useEffect(()=>{ load(); },[]);
     const load = async () => { setLoading(true); try { setProducts(await api.get('/api/products')); } catch(e){} setLoading(false); };
     const upd = async (id,field,val) => { try { await api.patch(`/api/products/${id}`,{[field]:val}); load(); } catch(e){} setEditCell(null); };
-    const scrape = async id => { try { const r = await api.post(`/api/scrape/${id}`,{}); alert(r.message); } catch(e){ alert('Errore'); } };
+    const scrape = async id => { try { const r=await api.post(`/api/scrape/${id}`,{}); alert(r.message); } catch(e){ alert('Errore'); } };
 
     const filtered = products.filter(p => {
-        if(f.brands.length && !f.brands.includes(p.brand)) return false;
-        if(f.categories.length && !f.categories.includes(p.category)) return false;
-        if(f.tier!==null && p.tier!==f.tier) return false;
-        if(f.status && p.status!==f.status) return false;
-        if(f.googleOnly && !p.is_google) return false;
+        if(f.brands.length&&!f.brands.includes(p.brand)) return false;
+        if(f.categories.length&&!f.categories.includes(p.category)) return false;
+        if(f.tier!==null&&p.tier!==f.tier) return false;
+        if(f.status&&p.status!==f.status) return false;
+        if(f.googleOnly&&!p.is_google) return false;
         return true;
     });
 
     return (
         <div className="tab-content space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-                <MultiSelect label="Brand" options={brands} selected={f.brands} onChange={v=>setF({...f,brands:v})} />
-                <MultiSelect label="Categoria" options={['smartphone','earable','wearable','accessory','bundle']} selected={f.categories} onChange={v=>setF({...f,categories:v})} />
-                {[1,2].map(t=><button key={t} onClick={()=>setF({...f,tier:f.tier===t?null:t})} className={`glass rounded-lg px-3 py-1.5 text-xs ${f.tier===t?'!bg-g-blue/15 text-g-blue ring-1 ring-g-blue/30':'text-gray-400'}`}>Tier {t}</button>)}
-                {['active','eol','disabled'].map(s=><button key={s} onClick={()=>setF({...f,status:f.status===s?null:s})} className={`glass rounded-lg px-3 py-1.5 text-xs capitalize ${f.status===s?'!bg-g-green/15 text-g-green ring-1 ring-g-green/30':'text-gray-400'}`}>{s}</button>)}
-                <button onClick={()=>setF({...f,googleOnly:!f.googleOnly})} className={`glass rounded-lg px-3 py-1.5 text-xs ${f.googleOnly?'!bg-g-green/15 text-g-green ring-1 ring-g-green/30':'text-gray-400'}`}>Solo Google</button>
+                <MultiSelect label="Brand" options={brands} selected={f.brands} onChange={v=>setF({...f,brands:v})}/>
+                <MultiSelect label="Categoria" options={['smartphone','earable','wearable','accessory','bundle']} selected={f.categories} onChange={v=>setF({...f,categories:v})}/>
+                {[1,2].map(t=><button key={t} onClick={()=>setF({...f,tier:f.tier===t?null:t})} className={`rounded-lg px-3 py-1.5 text-xs border shadow-sm transition-colors ${f.tier===t?'bg-brand-50 text-brand border-blue-200':'bg-white text-txt-3 border-brd'}`}>Tier {t}</button>)}
+                {['active','eol','disabled'].map(s=><button key={s} onClick={()=>setF({...f,status:f.status===s?null:s})} className={`rounded-lg px-3 py-1.5 text-xs border capitalize shadow-sm transition-colors ${f.status===s?'bg-g-green-50 text-g-green border-green-200':'bg-white text-txt-3 border-brd'}`}>{s}</button>)}
+                <button onClick={()=>setF({...f,googleOnly:!f.googleOnly})} className={`rounded-lg px-3 py-1.5 text-xs border shadow-sm transition-colors ${f.googleOnly?'bg-g-green-50 text-g-green border-green-200':'bg-white text-txt-3 border-brd'}`}>Solo Google</button>
                 <div className="ml-auto flex gap-2">
-                    <button onClick={()=>setShowAdd(true)} className="bg-g-blue/90 hover:bg-g-blue text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:shadow-lg hover:shadow-g-blue/20">+ Aggiungi Prodotto</button>
-                    <button onClick={()=>setShowImport(true)} className="glass text-gray-300 hover:text-white px-4 py-1.5 rounded-lg text-xs font-medium transition-all">📋 Import Lista</button>
+                    <button onClick={()=>setShowAdd(true)} className="bg-brand hover:bg-brand-light text-white px-4 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-colors">+ Aggiungi Prodotto</button>
+                    <button onClick={()=>setShowImport(true)} className="bg-white border border-brd text-txt-2 hover:bg-surface-2 px-4 py-1.5 rounded-lg text-xs font-medium shadow-sm transition-colors">📋 Import Lista</button>
                 </div>
             </div>
 
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="bg-white rounded-xl shadow-card overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-xs">
-                        <thead><tr className="bg-surface-3/80 border-b border-border-subtle">
-                            {['Brand','Serie','Modello','Cat.','Tier','Status','Listino','Streak','Azioni'].map(h=><th key={h} className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">{h}</th>)}
+                        <thead><tr className="bg-surface-2 border-b border-brd">
+                            {['Brand','Serie','Modello','Cat.','Tier','Status','Listino','Streak','Azioni'].map(h=><th key={h} className="text-left px-4 py-3 font-semibold text-txt-3 uppercase text-[10px] tracking-wider">{h}</th>)}
                         </tr></thead>
                         <tbody>
-                            {filtered.map((p,i) => (
-                                <tr key={p.id} className={`tbl-row border-b border-border-subtle/50 ${p.not_found_streak>=3?'bg-g-red/[0.03]':i%2?'bg-white/[0.01]':''}`}>
-                                    <td className="px-4 py-2 font-medium">{p.brand}</td>
-                                    <td className="px-4 py-2 text-gray-500">{p.series}</td>
-                                    <td className="px-4 py-2 text-gray-200">{p.model}</td>
+                            {filtered.map((p,i)=>(
+                                <tr key={p.id} className={`tbl-row border-b border-brd-light ${p.not_found_streak>=3?'bg-red-50/50':i%2?'bg-surface/30':''}`}>
+                                    <td className="px-4 py-2 font-medium text-txt">{p.brand}</td>
+                                    <td className="px-4 py-2 text-txt-3">{p.series}</td>
+                                    <td className="px-4 py-2 text-txt-2">{p.model}</td>
                                     <td className="px-4 py-2"><CatBadge cat={p.category}/></td>
-                                    <td className="px-4 py-2">{editCell===`${p.id}-tier`?<select value={editVal} onChange={e=>{setEditVal(e.target.value);upd(p.id,'tier',+e.target.value)}} className="bg-surface-3 rounded px-1 py-0.5 text-xs" autoFocus onBlur={()=>setEditCell(null)}><option value="1">1</option><option value="2">2</option></select>:<span onClick={()=>{setEditCell(`${p.id}-tier`);setEditVal(p.tier)}} className="cursor-pointer"><TierBadge t={p.tier}/></span>}</td>
-                                    <td className="px-4 py-2">{editCell===`${p.id}-status`?<select value={editVal} onChange={e=>{setEditVal(e.target.value);upd(p.id,'status',e.target.value)}} className="bg-surface-3 rounded px-1 py-0.5 text-xs" autoFocus onBlur={()=>setEditCell(null)}><option value="active">active</option><option value="eol">eol</option><option value="disabled">disabled</option></select>:<span onClick={()=>{setEditCell(`${p.id}-status`);setEditVal(p.status)}} className="cursor-pointer"><StatusBadge s={p.status}/></span>}</td>
-                                    <td className="px-4 py-2 text-right">{editCell===`${p.id}-listino`?<input type="number" value={editVal} onChange={e=>setEditVal(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')upd(p.id,'listino_eur',parseFloat(editVal))}} onBlur={()=>setEditCell(null)} className="bg-surface-3 rounded px-1 py-0.5 text-xs w-20 text-right" autoFocus/>:<span onClick={()=>{setEditCell(`${p.id}-listino`);setEditVal(p.listino_eur||'')}} className="cursor-pointer text-gray-400">{p.listino_eur?`€${p.listino_eur.toFixed(2)}`:'—'}</span>}</td>
-                                    <td className="px-4 py-2 text-center">{p.not_found_streak>=3?<Badge color="red">{p.not_found_streak}</Badge>:<span className="text-gray-600">{p.not_found_streak}</span>}</td>
+                                    <td className="px-4 py-2">{editCell===`${p.id}-tier`?<select value={editVal} onChange={e=>{setEditVal(e.target.value);upd(p.id,'tier',+e.target.value)}} className="bg-surface-2 border border-brd rounded px-1 py-0.5 text-xs" autoFocus onBlur={()=>setEditCell(null)}><option value="1">1</option><option value="2">2</option></select>:<span onClick={()=>{setEditCell(`${p.id}-tier`);setEditVal(p.tier)}} className="cursor-pointer"><TierBadge t={p.tier}/></span>}</td>
+                                    <td className="px-4 py-2">{editCell===`${p.id}-status`?<select value={editVal} onChange={e=>{setEditVal(e.target.value);upd(p.id,'status',e.target.value)}} className="bg-surface-2 border border-brd rounded px-1 py-0.5 text-xs" autoFocus onBlur={()=>setEditCell(null)}><option value="active">active</option><option value="eol">eol</option><option value="disabled">disabled</option></select>:<span onClick={()=>{setEditCell(`${p.id}-status`);setEditVal(p.status)}} className="cursor-pointer"><StatusBadge s={p.status}/></span>}</td>
+                                    <td className="px-4 py-2 text-right">{editCell===`${p.id}-listino`?<input type="number" value={editVal} onChange={e=>setEditVal(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')upd(p.id,'listino_eur',parseFloat(editVal))}} onBlur={()=>setEditCell(null)} className="bg-surface-2 border border-brd rounded px-1 py-0.5 text-xs w-20 text-right" autoFocus/>:<span onClick={()=>{setEditCell(`${p.id}-listino`);setEditVal(p.listino_eur||'')}} className="cursor-pointer text-txt-2">{p.listino_eur?`€${p.listino_eur.toFixed(2)}`:'—'}</span>}</td>
+                                    <td className="px-4 py-2 text-center">{p.not_found_streak>=3?<Badge color="red">{p.not_found_streak}</Badge>:<span className="text-txt-3">{p.not_found_streak}</span>}</td>
                                     <td className="px-4 py-2"><div className="flex gap-1">
-                                        <button onClick={()=>scrape(p.id)} title="Scraping" className="hover:bg-white/5 rounded p-1 transition-colors">🔄</button>
-                                        <button onClick={()=>upd(p.id,'status',p.status==='disabled'?'active':'disabled')} title="Toggle" className="hover:bg-white/5 rounded p-1 transition-colors">{p.status==='disabled'?'👁️':'🚫'}</button>
+                                        <button onClick={()=>scrape(p.id)} title="Scraping" className="hover:bg-surface-2 rounded p-1 transition-colors">🔄</button>
+                                        <button onClick={()=>upd(p.id,'status',p.status==='disabled'?'active':'disabled')} title="Toggle" className="hover:bg-surface-2 rounded p-1 transition-colors">{p.status==='disabled'?'👁️':'🚫'}</button>
                                     </div></td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-                <div className="px-4 py-2 border-t border-border-subtle text-[11px] text-gray-500">{filtered.length} / {products.length} prodotti</div>
+                <div className="px-4 py-2 border-t border-brd-light text-[11px] text-txt-3">{filtered.length} / {products.length} prodotti</div>
             </div>
 
-            {showAdd && <AddModal onClose={()=>setShowAdd(false)} onDone={load} />}
-            {showImport && <ImportModal onClose={()=>setShowImport(false)} onDone={load} />}
+            {showAdd && <AddModal onClose={()=>setShowAdd(false)} onDone={load}/>}
+            {showImport && <ImportModal onClose={()=>setShowImport(false)} onDone={load}/>}
         </div>
     );
 }
 
-/* ====== Add Product Modal ====== */
+/* ── Add Product Modal ── */
 function AddModal({onClose, onDone}) {
     const [brand, setBrand] = useState('');
     const [raw, setRaw] = useState('');
     const [sug, setSug] = useState(null);
     const [loading, setLoading] = useState(false);
     const brands = ['Google','Samsung','Apple','Honor','OPPO','Xiaomi','Redmi','POCO','Motorola'];
-    const suggest = async () => { setLoading(true); try { setSug(await api.post('/api/products/suggest',{brand,model_name_raw:raw})); } catch(e){alert(e)} setLoading(false); };
-    const save = async () => { if(!sug) return; setLoading(true); try { await api.post('/api/products',{brand,series:sug.series,model:sug.model,category:sug.category,tier:sug.tier_suggested,is_google:brand==='Google',listino_eur:sug.listino_eur}); onDone(); onClose(); } catch(e){alert(e)} setLoading(false); };
+    const suggest = async ()=>{ setLoading(true); try{ setSug(await api.post('/api/products/suggest',{brand,model_name_raw:raw})); }catch(e){alert(e)} setLoading(false); };
+    const save = async ()=>{ if(!sug) return; setLoading(true); try{ await api.post('/api/products',{brand,series:sug.series,model:sug.model,category:sug.category,tier:sug.tier_suggested,is_google:brand==='Google',listino_eur:sug.listino_eur}); onDone(); onClose(); }catch(e){alert(e)} setLoading(false); };
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="glass-strong rounded-2xl p-6 w-full max-w-lg shadow-2xl" onClick={e=>e.stopPropagation()}>
-                <h3 className="text-lg font-bold text-g-blue mb-4">+ Aggiungi Prodotto</h3>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-modal border border-brd" onClick={e=>e.stopPropagation()}>
+                <h3 className="text-lg font-bold text-brand mb-4">+ Aggiungi Prodotto</h3>
                 <div className="space-y-3">
-                    <select value={brand} onChange={e=>setBrand(e.target.value)} className="w-full bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-g-blue/40"><option value="">Seleziona Brand</option>{brands.map(b=><option key={b} value={b}>{b}</option>)}</select>
-                    <input value={raw} onChange={e=>setRaw(e.target.value)} placeholder="Nome modello (es. Galaxy S26 Ultra)" className="w-full bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-g-blue/40" />
-                    <button onClick={suggest} disabled={!brand||!raw||loading} className="w-full bg-g-blue/90 hover:bg-g-blue disabled:bg-surface-4 disabled:text-gray-600 text-white py-2.5 rounded-lg text-sm font-medium transition-all">{loading?'Analisi AI...':'🤖 Suggerisci con AI'}</button>
+                    <select value={brand} onChange={e=>setBrand(e.target.value)} className="w-full bg-white border border-brd rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"><option value="">Seleziona Brand</option>{brands.map(b=><option key={b} value={b}>{b}</option>)}</select>
+                    <input value={raw} onChange={e=>setRaw(e.target.value)} placeholder="Nome modello (es. Galaxy S26 Ultra)" className="w-full bg-white border border-brd rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"/>
+                    <button onClick={suggest} disabled={!brand||!raw||loading} className="w-full bg-brand hover:bg-brand-light disabled:bg-gray-200 disabled:text-gray-400 text-white py-2.5 rounded-lg text-sm font-medium transition-colors">{loading?'Analisi AI...':'🤖 Suggerisci con AI'}</button>
                 </div>
-                {sug && <div className="mt-4 bg-surface-3 rounded-xl p-4 space-y-2 border border-border-subtle">
+                {sug && <div className="mt-4 bg-surface-2 rounded-xl p-4 space-y-2 border border-brd-light">
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div><span className="text-gray-500">Serie:</span> <input value={sug.series} onChange={e=>setSug({...sug,series:e.target.value})} className="bg-surface-4 rounded px-2 py-1 ml-1 w-28" /></div>
-                        <div><span className="text-gray-500">Modello:</span> <input value={sug.model} onChange={e=>setSug({...sug,model:e.target.value})} className="bg-surface-4 rounded px-2 py-1 ml-1 w-28" /></div>
-                        <div><span className="text-gray-500">Categoria:</span> <select value={sug.category} onChange={e=>setSug({...sug,category:e.target.value})} className="bg-surface-4 rounded px-2 py-1 ml-1">{['smartphone','earable','wearable','accessory','bundle'].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-                        <div><span className="text-gray-500">Listino:</span> <input type="number" value={sug.listino_eur} onChange={e=>setSug({...sug,listino_eur:parseFloat(e.target.value)})} className="bg-surface-4 rounded px-2 py-1 ml-1 w-20" /></div>
-                        <div><span className="text-gray-500">Tier:</span> <TierBadge t={sug.tier_suggested}/></div>
+                        <div><span className="text-txt-3">Serie:</span> <input value={sug.series} onChange={e=>setSug({...sug,series:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-28"/></div>
+                        <div><span className="text-txt-3">Modello:</span> <input value={sug.model} onChange={e=>setSug({...sug,model:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-28"/></div>
+                        <div><span className="text-txt-3">Categoria:</span> <select value={sug.category} onChange={e=>setSug({...sug,category:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1">{['smartphone','earable','wearable','accessory','bundle'].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+                        <div><span className="text-txt-3">Listino:</span> <input type="number" value={sug.listino_eur} onChange={e=>setSug({...sug,listino_eur:parseFloat(e.target.value)})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-20"/></div>
+                        <div><span className="text-txt-3">Tier:</span> <TierBadge t={sug.tier_suggested}/></div>
                     </div>
-                    {sug.notes && <p className="text-[11px] text-gray-500 italic">{sug.notes}</p>}
-                    <button onClick={save} disabled={loading} className="w-full bg-g-green/90 hover:bg-g-green text-white py-2 rounded-lg text-sm font-medium mt-2 transition-all">Conferma e Salva</button>
+                    {sug.notes && <p className="text-[11px] text-txt-3 italic">{sug.notes}</p>}
+                    <button onClick={save} disabled={loading} className="w-full bg-g-green hover:bg-green-600 text-white py-2 rounded-lg text-sm font-medium mt-2 transition-colors">Conferma e Salva</button>
                 </div>}
-                <button onClick={onClose} className="w-full mt-3 text-gray-500 hover:text-gray-300 text-xs py-1 transition-colors">Annulla</button>
+                <button onClick={onClose} className="w-full mt-3 text-txt-3 hover:text-txt text-xs py-1 transition-colors">Annulla</button>
             </div>
         </div>
     );
 }
 
-/* ====== Import Modal ====== */
+/* ── Import Modal ── */
 function ImportModal({onClose, onDone}) {
     const [text, setText] = useState('');
     const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [excl, setExcl] = useState(new Set());
-    const analyze = async () => { setLoading(true); try { const d = await api.post('/api/products/import-batch',{text}); setPreview(d.products); } catch(e){alert(e)} setLoading(false); };
-    const confirm = async () => { setLoading(true); try { await api.post('/api/products/import-batch/confirm',{products:preview.filter((_,i)=>!excl.has(i))}); onDone(); onClose(); } catch(e){alert(e)} setLoading(false); };
+    const analyze = async ()=>{ setLoading(true); try{ const d=await api.post('/api/products/import-batch',{text}); setPreview(d.products); }catch(e){alert(e)} setLoading(false); };
+    const confirm = async ()=>{ setLoading(true); try{ await api.post('/api/products/import-batch/confirm',{products:preview.filter((_,i)=>!excl.has(i))}); onDone(); onClose(); }catch(e){alert(e)} setLoading(false); };
     return (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={onClose}>
-            <div className="glass-strong rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-2xl" onClick={e=>e.stopPropagation()}>
-                <h3 className="text-lg font-bold text-g-blue mb-4">📋 Import Lista Prodotti</h3>
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-modal border border-brd" onClick={e=>e.stopPropagation()}>
+                <h3 className="text-lg font-bold text-brand mb-4">📋 Import Lista Prodotti</h3>
                 {!preview ? <div className="space-y-3">
-                    <textarea value={text} onChange={e=>setText(e.target.value)} rows={6} placeholder="Incolla lista prodotti (uno per riga)" className="w-full bg-surface-3 border border-border-subtle rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-g-blue/40 resize-none" />
-                    <button onClick={analyze} disabled={!text||loading} className="w-full bg-g-blue/90 hover:bg-g-blue disabled:bg-surface-4 text-white py-2.5 rounded-lg text-sm font-medium">{loading?'Analisi AI...':'🤖 Analizza'}</button>
+                    <textarea value={text} onChange={e=>setText(e.target.value)} rows={6} placeholder="Incolla lista prodotti (uno per riga)" className="w-full bg-white border border-brd rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand resize-none"/>
+                    <button onClick={analyze} disabled={!text||loading} className="w-full bg-brand hover:bg-brand-light disabled:bg-gray-200 text-white py-2.5 rounded-lg text-sm font-medium">{loading?'Analisi AI...':'🤖 Analizza'}</button>
                 </div> : <div>
-                    <table className="w-full text-xs mb-4"><thead className="bg-surface-3"><tr><th className="px-2 py-1.5"></th><th className="px-2 py-1.5 text-left text-gray-400">Brand</th><th className="px-2 py-1.5 text-left text-gray-400">Modello</th><th className="px-2 py-1.5 text-left text-gray-400">Cat.</th><th className="px-2 py-1.5 text-right text-gray-400">Listino</th><th className="px-2 py-1.5 text-gray-400">Tier</th></tr></thead>
-                    <tbody>{preview.map((p,i)=><tr key={i} className={`border-t border-border-subtle ${excl.has(i)?'opacity-25':''}`}><td className="px-2 py-1.5"><input type="checkbox" checked={!excl.has(i)} onChange={()=>{const n=new Set(excl);excl.has(i)?n.delete(i):n.add(i);setExcl(n)}} className="rounded" /></td><td className="px-2 py-1.5">{p.brand}</td><td className="px-2 py-1.5">{p.model}</td><td className="px-2 py-1.5"><CatBadge cat={p.category}/></td><td className="px-2 py-1.5 text-right">€{p.listino_eur?.toFixed(2)}</td><td className="px-2 py-1.5 text-center"><TierBadge t={p.tier_suggested||p.tier||1}/></td></tr>)}</tbody></table>
-                    <button onClick={confirm} disabled={loading} className="w-full bg-g-green/90 hover:bg-g-green text-white py-2.5 rounded-lg text-sm font-medium">Conferma Import ({preview.length-excl.size})</button>
+                    <table className="w-full text-xs mb-4"><thead className="bg-surface-2"><tr><th className="px-2 py-1.5"></th><th className="px-2 py-1.5 text-left text-txt-3">Brand</th><th className="px-2 py-1.5 text-left text-txt-3">Modello</th><th className="px-2 py-1.5 text-left text-txt-3">Cat.</th><th className="px-2 py-1.5 text-right text-txt-3">Listino</th><th className="px-2 py-1.5 text-txt-3">Tier</th></tr></thead>
+                    <tbody>{preview.map((p,i)=><tr key={i} className={`border-t border-brd-light ${excl.has(i)?'opacity-25':''}`}><td className="px-2 py-1.5"><input type="checkbox" checked={!excl.has(i)} onChange={()=>{const n=new Set(excl);excl.has(i)?n.delete(i):n.add(i);setExcl(n)}} className="rounded border-gray-300"/></td><td className="px-2 py-1.5">{p.brand}</td><td className="px-2 py-1.5">{p.model}</td><td className="px-2 py-1.5"><CatBadge cat={p.category}/></td><td className="px-2 py-1.5 text-right">€{p.listino_eur?.toFixed(2)}</td><td className="px-2 py-1.5 text-center"><TierBadge t={p.tier_suggested||p.tier||1}/></td></tr>)}</tbody></table>
+                    <button onClick={confirm} disabled={loading} className="w-full bg-g-green hover:bg-green-600 text-white py-2.5 rounded-lg text-sm font-medium">Conferma Import ({preview.length-excl.size})</button>
                 </div>}
-                <button onClick={onClose} className="w-full mt-3 text-gray-500 hover:text-gray-300 text-xs py-1">Annulla</button>
+                <button onClick={onClose} className="w-full mt-3 text-txt-3 hover:text-txt text-xs py-1">Annulla</button>
             </div>
         </div>
     );
 }
 
-/* ====== TAB 3: CHAT ====== */
+/* ── TAB 3: CHAT ── */
 function ChatTab() {
     const [msgs, setMsgs] = useState([]);
     const [input, setInput] = useState('');
@@ -465,22 +433,22 @@ function ChatTab() {
     const endRef = useRef(null);
     useEffect(()=>{ endRef.current?.scrollIntoView({behavior:'smooth'}); },[msgs]);
 
-    const send = async () => {
+    const send = async ()=>{
         if(!input.trim()||streaming) return;
-        const txt = input.trim(); setInput(''); setPdfUrl(null);
+        const txt=input.trim(); setInput(''); setPdfUrl(null);
         setMsgs(p=>[...p,{role:'user',content:txt}]);
         setStreaming(true);
         try {
-            const res = await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:txt,conversation_history:msgs.map(m=>({role:m.role,content:m.content}))})});
-            const reader = res.body.getReader(); const dec = new TextDecoder(); let aText = '';
+            const res=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:txt,conversation_history:msgs.map(m=>({role:m.role,content:m.content}))})});
+            const reader=res.body.getReader(); const dec=new TextDecoder(); let aText='';
             while(true) {
-                const {done, value} = await reader.read(); if(done) break;
-                const chunk = dec.decode(value,{stream:true});
-                for (const line of chunk.split('\n').filter(l=>l.startsWith('data: '))) {
-                    try { const d = JSON.parse(line.slice(6));
-                        if(d.type==='text') { aText+=d.content; setMsgs(p=>{const u=[...p]; const li=u.length-1; if(u[li]?.role==='assistant') u[li]={role:'assistant',content:aText}; else u.push({role:'assistant',content:aText}); return u;}); }
-                        else if(d.type==='pdf_ready') setPdfUrl(d.pdf_path);
-                    } catch(e){}
+                const {done,value}=await reader.read(); if(done) break;
+                const chunk=dec.decode(value,{stream:true});
+                for(const line of chunk.split('\n').filter(l=>l.startsWith('data: '))) {
+                    try { const d=JSON.parse(line.slice(6));
+                        if(d.type==='text'){aText+=d.content;setMsgs(p=>{const u=[...p];const li=u.length-1;if(u[li]?.role==='assistant')u[li]={role:'assistant',content:aText};else u.push({role:'assistant',content:aText});return u;});}
+                        else if(d.type==='pdf_ready')setPdfUrl(d.pdf_path);
+                    }catch(e){}
                 }
             }
         } catch(e) { setMsgs(p=>[...p,{role:'assistant',content:'Errore di connessione.'}]); }
@@ -490,56 +458,56 @@ function ChatTab() {
     return (
         <div className="tab-content flex flex-col h-[calc(100vh-80px)]">
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                {msgs.length===0 && <div className="text-center py-24"><p className="text-4xl mb-3 opacity-40">💬</p><p className="text-gray-400">Ciao Tania! Sono il tuo assistente BI.</p><p className="text-gray-600 text-sm mt-1">Chiedimi di analizzare promozioni, confrontare competitor, o generare report PDF.</p></div>}
-                {msgs.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${m.role==='user'?'bg-g-blue text-white rounded-br-sm':'glass text-gray-200 rounded-bl-sm'}`}>{m.content}</div></div>)}
-                {streaming && <div className="flex justify-start"><div className="typing glass rounded-2xl px-4 py-3"><span></span> <span></span> <span></span></div></div>}
-                {pdfUrl && <div className="flex justify-start"><a href="/api/reports/download/latest" className="glass !bg-g-green/10 text-g-green rounded-xl px-4 py-2.5 text-sm hover:!bg-g-green/20 transition-all inline-flex items-center gap-2">📄 Scarica PDF</a></div>}
+                {msgs.length===0 && <div className="text-center py-24"><p className="text-4xl mb-3 opacity-30">💬</p><p className="text-txt-2">Ciao Tania! Sono il tuo assistente BI.</p><p className="text-txt-3 text-sm mt-1">Chiedimi di analizzare promozioni, confrontare competitor, o generare report PDF.</p></div>}
+                {msgs.map((m,i)=><div key={i} className={`flex ${m.role==='user'?'justify-end':'justify-start'}`}><div className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${m.role==='user'?'bg-brand text-white rounded-br-sm shadow-sm':'bg-white text-txt border border-brd rounded-bl-sm shadow-card'}`}>{m.content}</div></div>)}
+                {streaming && <div className="flex justify-start"><div className="typing bg-white border border-brd rounded-2xl px-4 py-3 shadow-card"><span></span> <span></span> <span></span></div></div>}
+                {pdfUrl && <div className="flex justify-start"><a href="/api/reports/download/latest" className="bg-g-green-50 text-g-green border border-green-200 rounded-xl px-4 py-2.5 text-sm hover:bg-green-100 transition-colors inline-flex items-center gap-2 shadow-sm">📄 Scarica PDF</a></div>}
                 <div ref={endRef}/>
             </div>
-            <div className="border-t border-border-subtle p-4">
+            <div className="border-t border-brd p-4 bg-white">
                 <div className="flex gap-2 max-w-3xl mx-auto">
-                    <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder="Scrivi un messaggio..." disabled={streaming} className="flex-1 glass rounded-xl px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-g-blue/40 bg-transparent" />
-                    <button onClick={send} disabled={!input.trim()||streaming} className="bg-g-blue/90 hover:bg-g-blue disabled:bg-surface-4 disabled:text-gray-600 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all">Invia</button>
+                    <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!e.shiftKey&&send()} placeholder="Scrivi un messaggio..." disabled={streaming} className="flex-1 bg-surface border border-brd rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand"/>
+                    <button onClick={send} disabled={!input.trim()||streaming} className="bg-brand hover:bg-brand-light disabled:bg-gray-200 disabled:text-gray-400 text-white px-6 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm">Invia</button>
                 </div>
             </div>
         </div>
     );
 }
 
-/* ====== TAB 4: REPORT ====== */
+/* ── TAB 4: REPORT ── */
 function ReportTab() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [testLoading, setTestLoading] = useState(false);
     useEffect(()=>{ (async()=>{ try{setReports(await api.get('/api/reports'))}catch(e){} setLoading(false); })(); },[]);
-    const nextFri = () => { const d=new Date(); d.setDate(d.getDate()+((5-d.getDay()+7)%7||7)); return d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); };
-    const testEmail = async () => { setTestLoading(true); try { const r = await api.post('/api/test-email',{}); alert(`${r.status}: ${r.message}`); } catch(e){alert('Errore: '+e.message)} setTestLoading(false); };
+    const nextFri = ()=>{ const d=new Date(); d.setDate(d.getDate()+((5-d.getDay()+7)%7||7)); return d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); };
+    const testEmail = async ()=>{ setTestLoading(true); try{ const r=await api.post('/api/test-email',{}); alert(`${r.status}: ${r.message}`); }catch(e){alert('Errore: '+e.message)} setTestLoading(false); };
     return (
         <div className="tab-content space-y-4">
             <div className="flex gap-4">
-                <div className="flex-1 glass rounded-xl p-4 flex items-center gap-3">
+                <div className="flex-1 bg-white rounded-xl p-4 shadow-card flex items-center gap-3 border border-brd-light">
                     <span className="text-xl">📅</span>
-                    <div><p className="text-xs text-gray-500">Prossimo report automatico</p><p className="text-sm text-g-blue font-medium">Venerdì {nextFri()} ore 08:00</p></div>
+                    <div><p className="text-xs text-txt-3">Prossimo report automatico</p><p className="text-sm text-brand font-medium">Venerdì {nextFri()} ore 08:00</p></div>
                 </div>
-                <button onClick={testEmail} disabled={testLoading} className="glass hover:!bg-g-blue/10 text-g-blue px-6 rounded-xl text-sm font-medium transition-all flex items-center gap-2">
-                    {testLoading ? '⏳ Invio in corso...' : '📧 Test Email Immediato'}
+                <button onClick={testEmail} disabled={testLoading} className="bg-white border border-brd hover:bg-brand-50 text-brand px-6 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+                    {testLoading?'⏳ Invio...':'📧 Test Email'}
                 </button>
             </div>
-            <div className="glass rounded-xl overflow-hidden">
+            <div className="bg-white rounded-xl shadow-card overflow-hidden">
                 <table className="w-full text-xs">
-                    <thead><tr className="bg-surface-3/80 border-b border-border-subtle">
-                        {['Tipo','Titolo','Settimana','Generato il','Da','Azioni'].map(h=><th key={h} className="text-left px-4 py-3 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">{h}</th>)}
+                    <thead><tr className="bg-surface-2 border-b border-brd">
+                        {['Tipo','Titolo','Settimana','Generato il','Da','Azioni'].map(h=><th key={h} className="text-left px-4 py-3 font-semibold text-txt-3 uppercase text-[10px] tracking-wider">{h}</th>)}
                     </tr></thead>
                     <tbody>
-                        {loading?<tr><td colSpan={6} className="text-center py-12 text-gray-500">Caricamento...</td></tr>:
-                        reports.length===0?<tr><td colSpan={6} className="text-center py-12 text-gray-500">Nessun report. Il primo verrà generato venerdì.</td></tr>:
-                        reports.map((r,i)=><tr key={r.id} className={`tbl-row border-b border-border-subtle/50 ${i%2?'bg-white/[0.01]':''}`}>
+                        {loading?<tr><td colSpan={6} className="text-center py-12 text-txt-3">Caricamento...</td></tr>:
+                        reports.length===0?<tr><td colSpan={6} className="text-center py-12 text-txt-3">Nessun report. Il primo verrà generato venerdì.</td></tr>:
+                        reports.map((r,i)=><tr key={r.id} className={`tbl-row border-b border-brd-light ${i%2?'bg-surface/30':''}`}>
                             <td className="px-4 py-2.5"><Badge color={r.type==='weekly'?'blue':'green'}>{r.type}</Badge></td>
-                            <td className="px-4 py-2.5 text-gray-200">{r.title}</td>
-                            <td className="px-4 py-2.5 text-gray-500">{r.settimana}</td>
-                            <td className="px-4 py-2.5 text-gray-500">{new Date(r.generated_at).toLocaleString('it-IT')}</td>
-                            <td className="px-4 py-2.5 text-gray-500">{r.generated_by}</td>
-                            <td className="px-4 py-2.5"><a href={`/api/reports/download/${r.id}`} className="text-g-blue hover:text-blue-300 transition-colors font-medium">⬇️ PDF</a></td>
+                            <td className="px-4 py-2.5 text-txt">{r.title}</td>
+                            <td className="px-4 py-2.5 text-txt-3">{r.settimana}</td>
+                            <td className="px-4 py-2.5 text-txt-3">{new Date(r.generated_at).toLocaleString('it-IT')}</td>
+                            <td className="px-4 py-2.5 text-txt-3">{r.generated_by}</td>
+                            <td className="px-4 py-2.5"><a href={`/api/reports/download/${r.id}`} className="text-brand hover:text-brand-light font-medium transition-colors">⬇️ PDF</a></td>
                         </tr>)}
                     </tbody>
                 </table>
@@ -548,53 +516,53 @@ function ReportTab() {
     );
 }
 
-/* ====== TAB 5: SISTEMA ====== */
+/* ── TAB 5: SISTEMA ── */
 function SistemaTab() {
     const [status, setStatus] = useState(null);
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(()=>{ load(); },[]);
-    const load = async () => { setLoading(true); try { const [s,l]=await Promise.all([api.get('/api/system/status'),api.get('/api/system/logs?limit=30')]); setStatus(s); setLogs(l); } catch(e){} setLoading(false); };
-    const fullScrape = async () => { if(!confirm('Avviare scraping completo?')) return; try { const r=await api.post('/api/scrape/full',{}); alert(r.message); } catch(e){alert(e)} };
-    const markEol = async id => { try { await api.post(`/api/system/mark-eol/${id}`,{}); load(); } catch(e){alert(e)} };
+    const load = async ()=>{ setLoading(true); try{ const [s,l]=await Promise.all([api.get('/api/system/status'),api.get('/api/system/logs?limit=30')]); setStatus(s); setLogs(l); }catch(e){} setLoading(false); };
+    const fullScrape = async ()=>{ if(!confirm('Avviare scraping completo?')) return; try{ const r=await api.post('/api/scrape/full',{}); alert(r.message); }catch(e){alert(e)} };
+    const markEol = async id=>{ try{ await api.post(`/api/system/mark-eol/${id}`,{}); load(); }catch(e){alert(e)} };
 
-    if(loading) return <div className="tab-content text-center py-16 text-gray-500">Caricamento...</div>;
+    if(loading) return <div className="tab-content text-center py-16 text-txt-3">Caricamento...</div>;
     return (
         <div className="tab-content space-y-5">
             {status && <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <StatCard icon="📦" value={status.total_products_monitored} label="Prodotti monitorati" color="blue" />
-                <StatCard icon="🟢" value={status.google_products} label="Google Pixel" color="green" />
-                <StatCard icon="🔴" value={status.competitor_products} label="Competitor" color="yellow" />
-                <StatCard icon="🏪" value={status.retailers?.length||4} label="Retailer attivi" color="blue" sub="Euronics, Unieuro, MW, Amazon" />
+                <StatCard icon="📦" value={status.total_products_monitored} label="Prodotti monitorati" color="blue"/>
+                <StatCard icon="🟢" value={status.google_products} label="Google Pixel" color="green"/>
+                <StatCard icon="🔴" value={status.competitor_products} label="Competitor" color="yellow"/>
+                <StatCard icon="🏪" value={status.retailers?.length||4} label="Retailer attivi" color="blue" sub="Euronics, Unieuro, MW, Amazon"/>
             </div>}
 
             <div className="flex items-center gap-3">
-                <button onClick={fullScrape} className="bg-g-blue/90 hover:bg-g-blue text-white px-5 py-2 rounded-lg text-sm font-medium transition-all hover:shadow-lg hover:shadow-g-blue/20">▶️ Scraping Manuale Completo</button>
-                <button onClick={load} className="glass text-gray-300 hover:text-white px-4 py-2 rounded-lg text-sm transition-all">🔄 Aggiorna</button>
-                {status?.last_scrape && <span className="text-xs text-gray-500">Ultimo: {new Date(status.last_scrape).toLocaleString('it-IT')}</span>}
+                <button onClick={fullScrape} className="bg-brand hover:bg-brand-light text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm">▶️ Scraping Manuale Completo</button>
+                <button onClick={load} className="bg-white border border-brd text-txt-2 hover:bg-surface-2 px-4 py-2 rounded-lg text-sm shadow-sm transition-colors">🔄 Aggiorna</button>
+                {status?.last_scrape && <span className="text-xs text-txt-3">Ultimo: {new Date(status.last_scrape).toLocaleString('it-IT')}</span>}
             </div>
 
-            {status?.alerts?.length > 0 && <div className="glass !border-g-red/20 rounded-xl p-4">
-                <h3 className="text-sm font-bold text-g-red mb-2">⚠️ Prodotti non trovati (streak ≥ 3)</h3>
-                {status.alerts.map(a=><div key={a.product_id} className="flex items-center justify-between bg-g-red/5 rounded-lg px-3 py-2 text-xs mt-1">
-                    <span><strong>{a.brand} {a.model}</strong> — <Badge color="red">{a.not_found_streak} settimane</Badge></span>
-                    <button onClick={()=>markEol(a.product_id)} className="text-g-yellow hover:text-yellow-300 font-medium transition-colors">Segna EOL</button>
+            {status?.alerts?.length>0 && <div className="bg-white rounded-xl p-4 shadow-card border-l-4 border-l-g-red">
+                <h3 className="text-sm font-bold text-g-red mb-2">Prodotti non trovati (streak ≥ 3)</h3>
+                {status.alerts.map(a=><div key={a.product_id} className="flex items-center justify-between bg-g-red-50 rounded-lg px-3 py-2 text-xs mt-1">
+                    <span><strong>{a.brand} {a.model}</strong> — <Badge color="red">{a.not_found_streak} sett.</Badge></span>
+                    <button onClick={()=>markEol(a.product_id)} className="text-g-yellow hover:text-yellow-600 font-medium transition-colors">Segna EOL</button>
                 </div>)}
             </div>}
 
-            <div className="glass rounded-xl overflow-hidden">
-                <h3 className="text-sm font-semibold text-gray-300 px-4 pt-4 pb-2">📋 Log Scraping</h3>
+            <div className="bg-white rounded-xl shadow-card overflow-hidden">
+                <h3 className="text-sm font-semibold text-txt px-4 pt-4 pb-2">📋 Log Scraping</h3>
                 <div className="overflow-x-auto max-h-80 overflow-y-auto">
                     <table className="w-full text-xs">
-                        <thead className="bg-surface-3/80 sticky top-0"><tr>
-                            {['Prodotto','Retailer','Status','Errore','Data'].map(h=><th key={h} className="text-left px-4 py-2 font-semibold text-gray-400 uppercase text-[10px] tracking-wider">{h}</th>)}
+                        <thead className="bg-surface-2 sticky top-0"><tr>
+                            {['Prodotto','Retailer','Status','Errore','Data'].map(h=><th key={h} className="text-left px-4 py-2 font-semibold text-txt-3 uppercase text-[10px] tracking-wider">{h}</th>)}
                         </tr></thead>
-                        <tbody>{logs.map((l,i)=><tr key={l.id} className={`border-t border-border-subtle/50 ${i%2?'bg-white/[0.01]':''}`}>
-                            <td className="px-4 py-1.5 text-gray-300">{l.product}</td>
-                            <td className="px-4 py-1.5 capitalize text-gray-400">{l.retailer}</td>
+                        <tbody>{logs.map((l,i)=><tr key={l.id} className={`border-t border-brd-light ${i%2?'bg-surface/30':''}`}>
+                            <td className="px-4 py-1.5 text-txt-2">{l.product}</td>
+                            <td className="px-4 py-1.5 capitalize text-txt-3">{l.retailer}</td>
                             <td className="px-4 py-1.5">{l.status==='found'?<Badge color="green">found</Badge>:l.status==='error'?<Badge color="red">error</Badge>:<Badge color="gray">not found</Badge>}</td>
-                            <td className="px-4 py-1.5 text-gray-600 truncate max-w-[200px]">{l.error_message||'—'}</td>
-                            <td className="px-4 py-1.5 text-gray-500">{new Date(l.scraped_at).toLocaleString('it-IT')}</td>
+                            <td className="px-4 py-1.5 text-txt-3 truncate max-w-[200px]">{l.error_message||'—'}</td>
+                            <td className="px-4 py-1.5 text-txt-3">{new Date(l.scraped_at).toLocaleString('it-IT')}</td>
                         </tr>)}</tbody>
                     </table>
                 </div>
@@ -603,31 +571,30 @@ function SistemaTab() {
     );
 }
 
-/* ====== APP ROOT ====== */
+/* ── APP ── */
 function App() {
     const [tab, setTab] = useState('promozioni');
     return (
         <div className="min-h-screen flex">
-            <Sidebar active={tab} setActive={setTab} />
-            <main className="ml-64 flex-1 min-h-screen">
-                {/* Top bar with logo centered */}
-                <header className="sticky top-0 z-30 glass-strong border-b border-border-subtle">
+            <Sidebar active={tab} setActive={setTab}/>
+            <main className="ml-64 flex-1 min-h-screen bg-surface">
+                <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-brd">
                     <div className="flex items-center justify-center h-12 px-6">
                         <div className="flex items-center gap-2">
-                            <img src="/static/logo.jpg" alt="" className="w-7 h-7 rounded object-contain" />
-                            <span className="text-sm font-semibold text-gray-300">TDS Tech Deep Search</span>
-                            <span className="text-[10px] text-gray-600 ml-1">| © React SRL</span>
+                            <img src="/static/logo.jpg" alt="" className="w-7 h-7 rounded object-contain"/>
+                            <span className="text-sm font-semibold text-txt-2">TDS Tech Deep Search</span>
+                            <span className="text-[10px] text-txt-3 ml-1">| © React SRL</span>
                         </div>
                     </div>
                 </header>
                 <div className="p-6">
-                    {tab==='promozioni' && <PromozioniTab />}
-                    {tab==='catalogo' && <CatalogoTab />}
-                    {tab==='chat' && <ChatTab />}
-                    {tab==='report' && <ReportTab />}
-                    {tab==='sistema' && <SistemaTab />}
+                    {tab==='promozioni'&&<PromozioniTab/>}
+                    {tab==='catalogo'&&<CatalogoTab/>}
+                    {tab==='chat'&&<ChatTab/>}
+                    {tab==='report'&&<ReportTab/>}
+                    {tab==='sistema'&&<SistemaTab/>}
                 </div>
-                <footer className="text-center py-4 text-[10px] text-gray-700 border-t border-border-subtle">
+                <footer className="text-center py-4 text-[10px] text-txt-3 border-t border-brd-light">
                     TDS — Tech Deep Search | © React SRL | Dati: Euronics, Unieuro, MediaWorld, Amazon
                 </footer>
             </main>
@@ -635,7 +602,7 @@ function App() {
     );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>

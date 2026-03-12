@@ -184,13 +184,23 @@ async def test_email():
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
         response = sg.send(message)
         logger.info("TEST EMAIL sent to %s (status: %d)", test_recipients, response.status_code)
-        return {
-            "status": "success",
-            "message": f"Email inviata a {', '.join(test_recipients)}",
-            "pdf_path": pdf_path,
-            "sendgrid_status": response.status_code,
-            "week": week,
-        }
+
+        if response.status_code in (200, 201, 202):
+            return {
+                "status": "success",
+                "message": f"Email inviata a {', '.join(test_recipients)}",
+                "pdf_path": pdf_path,
+                "sendgrid_status": response.status_code,
+                "week": week,
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"SendGrid ha risposto con status {response.status_code}",
+                "pdf_path": pdf_path,
+                "sendgrid_status": response.status_code,
+                "week": week,
+            }
     except Exception as e:
         logger.error("TEST EMAIL failed: %s", str(e))
         return {"status": "error", "message": str(e), "pdf_path": pdf_path}
