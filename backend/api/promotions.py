@@ -59,6 +59,8 @@ async def list_promotions(
     if not week:
         week = _get_current_week()
 
+    logger.info("GET /api/promotions — filtering week=%s", week)
+
     query = (
         select(Promotion, Product)
         .join(Product, Promotion.product_id == Product.id)
@@ -80,6 +82,8 @@ async def list_promotions(
 
     results = await session.execute(query)
     rows = results.all()
+
+    logger.info("GET /api/promotions — found %d promotions for week=%s", len(rows), week)
 
     return [
         PromotionOut(
