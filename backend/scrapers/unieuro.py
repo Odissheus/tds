@@ -53,15 +53,24 @@ class UnieuroScraper(BaseScraper):
             search_url = self.config["search_url"].format(query=query.replace(" ", "+"))
 
             logger.info("[unieuro] Navigating to: %s", search_url)
-            await page.goto(search_url, wait_until="networkidle", timeout=45000)
+            await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(3000)
 
             await self._dismiss_cookies(page)
             await self._log_page_state(page, "search")
 
+            # Check if we got a 404 / redirect — try alternate URL
+            page_text = await page.evaluate("() => document.body?.innerText?.substring(0, 200) || ''")
+            if "non trovata" in page_text.lower() or "non trovato" in page_text.lower() or "404" in page_text:
+                alt_url = f"https://www.unieuro.it/search?q={query.replace(' ', '+')}"
+                logger.info("[unieuro] Primary URL failed, trying alternate: %s", alt_url)
+                await page.goto(alt_url, wait_until="domcontentloaded", timeout=30000)
+                await page.wait_for_timeout(3000)
+                await self._log_page_state(page, "search-alt")
+
             # Strategy 1: CSS selectors
             cards = await self._find_cards(page)
-            logger.info("[unieuro] CSS strategy found %d cards for '%s'", len(cards), query)
+            logger.info("[unieuro] CSS found %d cards for '%s'", len(cards), query)
 
             for card in cards[:10]:
                 promo = await self._extract_from_card(card, product_model, product_brand, listino_eur, search_url)
@@ -72,38 +81,11 @@ class UnieuroScraper(BaseScraper):
             if not results:
                 logger.info("[unieuro] CSS found nothing, trying JS extraction")
                 js_products = await self._js_extract_products(page, product_model, product_brand)
-                logger.info("[unieuro] JS extraction found %d matches", len(js_products))
+                logger.info("[unieuro] JS found %d matches", len(js_products))
                 for jp in js_products[:5]:
                     promo = self._build_promo_from_js(jp, listino_eur, search_url)
                     if promo:
                         results.append(promo)
-
-            # Check offers page
-            try:
-                logger.info("[unieuro] Checking offers page: %s", self.config["promo_url"])
-                await page.goto(self.config["promo_url"], wait_until="networkidle", timeout=45000)
-                await page.wait_for_timeout(3000)
-                await self._log_page_state(page, "offers")
-
-                cards = await self._find_cards(page)
-                logger.info("[unieuro] Offers page found %d cards", len(cards))
-
-                for card in cards[:20]:
-                    promo = await self._extract_from_card(
-                        card, product_model, product_brand, listino_eur, self.config["promo_url"]
-                    )
-                    if promo:
-                        results.append(promo)
-
-                if not results:
-                    js_products = await self._js_extract_products(page, product_model, product_brand)
-                    for jp in js_products[:5]:
-                        promo = self._build_promo_from_js(jp, listino_eur, self.config["promo_url"])
-                        if promo:
-                            results.append(promo)
-
-            except Exception as e:
-                logger.warning("[unieuro] Error on offers page: %s", e)
 
         finally:
             await page.close()
@@ -195,23 +177,15 @@ class UnieuroScraper(BaseScraper):
                 pass
 
             sconto = self._calc_discount(prezzo_originale, prezzo_promo)
-
-            logger.info(
-                "[unieuro] PROMO FOUND: %s | %.2f -> %.2f (%.1f%% off)",
-                title_text[:60], prezzo_originale, prezzo_promo, sconto,
-            )
+            logger.info("[unieuro] PROMO FOUND: %s | %.2f -> %.2f (%.1f%%)",
+                       title_text[:60], prezzo_originale, prezzo_promo, sconto)
 
             return PromoResult(
-                retailer="unieuro",
-                retailer_variant=None,
-                prezzo_originale=prezzo_originale,
-                prezzo_promo=prezzo_promo,
-                sconto_percentuale=sconto,
-                data_inizio=date.today(),
-                data_fine=None,
-                url_fonte=url,
+                retailer="unieuro", retailer_variant=None,
+                prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
+                sconto_percentuale=sconto, data_inizio=date.today(),
+                data_fine=None, url_fonte=url,
             )
-
         except Exception as e:
             logger.debug("[unieuro] Error parsing card: %s", e)
             return None
@@ -222,32 +196,21 @@ class UnieuroScraper(BaseScraper):
             p = self._parse_price(raw)
             if p:
                 prices.append(p)
-
         if not prices:
             return None
-
         prezzo_promo = min(prices)
         prezzo_originale = max(prices) if len(prices) > 1 and max(prices) > prezzo_promo else None
-
         if prezzo_originale is None and listino_eur and listino_eur > prezzo_promo:
             prezzo_originale = listino_eur
-
         if prezzo_originale is None or prezzo_originale <= prezzo_promo:
             return None
-
         sconto = self._calc_discount(prezzo_originale, prezzo_promo)
         url = jp.get("href", "") or fallback_url
-
         logger.info("[unieuro][JS] PROMO: %s | %.2f -> %.2f (%.1f%%)",
                     jp.get("title", "")[:60], prezzo_originale, prezzo_promo, sconto)
-
         return PromoResult(
-            retailer="unieuro",
-            retailer_variant=None,
-            prezzo_originale=prezzo_originale,
-            prezzo_promo=prezzo_promo,
-            sconto_percentuale=sconto,
-            data_inizio=date.today(),
-            data_fine=None,
-            url_fonte=url,
+            retailer="unieuro", retailer_variant=None,
+            prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
+            sconto_percentuale=sconto, data_inizio=date.today(),
+            data_fine=None, url_fonte=url,
         )

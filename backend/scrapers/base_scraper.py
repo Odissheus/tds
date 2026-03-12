@@ -18,7 +18,7 @@ RETAILERS = {
     },
     "unieuro": {
         "base_url": "https://www.unieuro.it",
-        "search_url": "https://www.unieuro.it/online/ricerca?q={query}",
+        "search_url": "https://www.unieuro.it/online/cerca?q={query}",
         "promo_url": "https://www.unieuro.it/online/offerte/",
     },
     "mediaworld": {

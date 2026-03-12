@@ -85,6 +85,7 @@ async def _scrape_product(session: Session, product: Product) -> dict:
     now = datetime.now(timezone.utc)
     week_str = f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
     listino = product.listino_eur or 0
+    any_found = False
 
     for scraper_cls in SCRAPER_CLASSES:
         scraper: BaseScraper = scraper_cls()
@@ -123,8 +124,7 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                     scraped_at=now,
                 )
                 session.add(log_entry)
-
-                product.not_found_streak = 0
+                any_found = True
                 result["found"] += 1
                 logger.info(
                     "[%s] FOUND %d promos for %s %s (saved to DB, week=%s)",
@@ -138,17 +138,8 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                     scraped_at=now,
                 )
                 session.add(log_entry)
-
-                product.not_found_streak += 1
                 result["not_found"] += 1
-                logger.info(
-                    "[%s] NOT FOUND for %s %s (streak=%d)",
-                    retailer, product.brand, product.model, product.not_found_streak,
-                )
-
-                # Only send alert if key is configured and streak is high
-                if product.not_found_streak >= 3:
-                    await _send_not_found_alert_safe(product)
+                logger.info("[%s] NOT FOUND for %s %s", retailer, product.brand, product.model)
 
         except Exception as e:
             logger.error(
@@ -170,6 +161,16 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                 await scraper.close_browser()
             except Exception:
                 pass
+
+    # Update streak ONCE per product (not per retailer)
+    if any_found:
+        product.not_found_streak = 0
+    else:
+        product.not_found_streak += 1
+        logger.info("Product %s %s not found on ANY retailer (streak=%d)",
+                    product.brand, product.model, product.not_found_streak)
+        if product.not_found_streak >= 3:
+            await _send_not_found_alert_safe(product)
 
     return result
 
