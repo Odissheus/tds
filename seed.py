@@ -220,6 +220,10 @@ def seed_catalog():
                     if getattr(existing, field) != new_val:
                         setattr(existing, field, new_val)
                         changed = True
+                # Always reset streak on seed run
+                if existing.not_found_streak != 0:
+                    existing.not_found_streak = 0
+                    changed = True
                 if changed:
                     updated += 1
             else:
