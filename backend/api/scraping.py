@@ -11,6 +11,17 @@ router = APIRouter(prefix="/api/scrape", tags=["scraping"])
 logger = logging.getLogger("tds.api.scraping")
 
 
+@router.post("/full")
+async def scrape_all():
+    """Trigger full scraping for all products."""
+    task = run_scraping_task.delay()
+    return {
+        "status": "queued",
+        "task_id": str(task.id),
+        "message": "Scraping completo avviato per tutti i prodotti",
+    }
+
+
 @router.post("/{product_id}")
 async def scrape_single_product(product_id: str):
     """Trigger scraping for a single product."""
@@ -20,17 +31,6 @@ async def scrape_single_product(product_id: str):
         "task_id": str(task.id),
         "product_id": product_id,
         "message": f"Scraping avviato per prodotto {product_id}",
-    }
-
-
-@router.post("/full")
-async def scrape_all():
-    """Trigger full scraping for all products."""
-    task = run_scraping_task.delay()
-    return {
-        "status": "queued",
-        "task_id": str(task.id),
-        "message": "Scraping completo avviato per tutti i prodotti",
     }
 
 
