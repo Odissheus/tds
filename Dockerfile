@@ -70,4 +70,5 @@ EXPOSE 8000
 # Startup script: Celery worker + Uvicorn
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
+RUN echo "cache-bust-$(date +%s)" > /cache-bust.txt
 CMD ["/start.sh"]
