@@ -19,7 +19,6 @@ RETAILERS["amazon"] = {
     "promo_url": "https://www.amazon.it/deals",
 }
 
-# Realistic user-agents rotation
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -33,7 +32,6 @@ class AmazonScraper(BaseScraper):
     retailer_name = "amazon"
 
     async def init_browser(self):
-        """Initialize browser with stealth settings for Amazon."""
         from playwright.async_api import async_playwright
 
         pw = await async_playwright().start()
@@ -48,7 +46,6 @@ class AmazonScraper(BaseScraper):
         self._pw = pw
 
     async def new_page(self):
-        """Create page with Amazon-specific stealth settings."""
         if not self.browser:
             await self.init_browser()
 
@@ -65,7 +62,6 @@ class AmazonScraper(BaseScraper):
             },
         )
 
-        # Remove webdriver detection
         await context.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
             Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
@@ -78,12 +74,12 @@ class AmazonScraper(BaseScraper):
         return page
 
     async def _random_delay(self):
-        """Random delay between 2-5 seconds to mimic human behavior."""
         delay = random.uniform(2.0, 5.0)
         await asyncio.sleep(delay)
 
-    async def search_product(self, product_model: str, product_brand: str) -> List[PromoResult]:
-        """Search Amazon.it for a product in offers and direct product pages."""
+    async def search_product(
+        self, product_model: str, product_brand: str, listino_eur: float = 0
+    ) -> List[PromoResult]:
         results: List[PromoResult] = []
         page = await self.new_page()
 
@@ -92,63 +88,71 @@ class AmazonScraper(BaseScraper):
             query = f"{product_brand} {product_model}"
             search_url = self.config["search_url"].format(query=query.replace(" ", "+"))
 
-            await page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+            logger.info("[amazon] Navigating to: %s", search_url)
+            await page.goto(search_url, wait_until="networkidle", timeout=45000)
             await self._random_delay()
 
-            # Handle CAPTCHA page
+            # Handle CAPTCHA
             if await page.query_selector("#captchacharacters"):
-                logger.warning("Amazon CAPTCHA detected, skipping product %s", product_model)
+                logger.warning("[amazon] CAPTCHA detected, skipping %s %s", product_brand, product_model)
                 return results
 
-            # Accept cookies if present
-            cookie_btn = await page.query_selector("#sp-cc-accept, [data-action='sp-cc'][data-action-type='ACCEPT']")
-            if cookie_btn:
-                await cookie_btn.click()
-                await asyncio.sleep(1)
+            # Accept cookies
+            await self._dismiss_cookies(page)
+            await self._log_page_state(page, "search")
 
             product_cards = await page.query_selector_all(
                 "div[data-component-type='s-search-result']"
             )
+            logger.info("[amazon] Found %d search result cards", len(product_cards))
 
-            for card in product_cards[:5]:
+            for card in product_cards[:8]:
                 try:
-                    title_el = await card.query_selector(
-                        "h2 a span, h2 span.a-text-normal"
-                    )
+                    title_el = await card.query_selector("h2 a span, h2 span.a-text-normal")
                     title_text = await title_el.inner_text() if title_el else ""
 
                     if not self._is_matching_product(title_text, product_model, product_brand):
                         continue
 
-                    # Check for promo price (red/deal price)
+                    logger.info("[amazon] Matched product: %s", title_text[:80])
+
+                    # Promo price (current price, not struck through)
                     whole_price_el = await card.query_selector(
                         "span.a-price:not([data-a-strike]) span.a-offscreen"
                     )
+                    # Original price (struck through)
                     original_price_el = await card.query_selector(
                         "span.a-price[data-a-strike] span.a-offscreen, "
                         "span.a-text-price span.a-offscreen"
                     )
 
                     if not whole_price_el:
-                        continue
+                        # Fallback: try any price element
+                        whole_price_el = await card.query_selector("span.a-offscreen")
+                        if not whole_price_el:
+                            logger.info("[amazon] No price found for: %s", title_text[:60])
+                            continue
 
                     promo_text = await whole_price_el.inner_text()
                     prezzo_promo = self._parse_price(promo_text)
                     if prezzo_promo is None:
                         continue
 
-                    prezzo_originale = prezzo_promo
+                    prezzo_originale = None
                     if original_price_el:
                         orig_text = await original_price_el.inner_text()
                         parsed_orig = self._parse_price(orig_text)
                         if parsed_orig and parsed_orig > prezzo_promo:
                             prezzo_originale = parsed_orig
 
-                    # Only include if there's an actual discount
-                    if prezzo_originale <= prezzo_promo:
+                    # Fallback to DB listino
+                    if prezzo_originale is None and listino_eur and listino_eur > prezzo_promo:
+                        prezzo_originale = listino_eur
+
+                    if prezzo_originale is None or prezzo_originale <= prezzo_promo:
+                        logger.info("[amazon] No discount for: %s (promo=%.2f)", title_text[:60], prezzo_promo)
                         continue
 
-                    # Get product URL
                     link_el = await card.query_selector("h2 a")
                     url = ""
                     if link_el:
@@ -157,9 +161,12 @@ class AmazonScraper(BaseScraper):
                             url = href if href.startswith("http") else f"https://www.amazon.it{href}"
 
                     sconto = self._calc_discount(prezzo_originale, prezzo_promo)
-
-                    # Detect promo tags (badges)
                     promo_tag = await self._detect_promo_tag(card)
+
+                    logger.info(
+                        "[amazon] PROMO FOUND: %s | %.2f -> %.2f (%.1f%% off) tag=%s",
+                        title_text[:60], prezzo_originale, prezzo_promo, sconto, promo_tag,
+                    )
 
                     results.append(
                         PromoResult(
@@ -176,19 +183,32 @@ class AmazonScraper(BaseScraper):
                     )
 
                 except Exception as e:
-                    logger.debug("Error parsing Amazon search card: %s", str(e))
+                    logger.debug("[amazon] Error parsing search card: %s", e)
                     continue
 
-            # --- Deals/offers page ---
+            # --- JS fallback if CSS found nothing ---
+            if not results:
+                logger.info("[amazon] CSS selectors found nothing, trying JS extraction")
+                js_products = await self._js_extract_products(page, product_model, product_brand)
+                logger.info("[amazon] JS extraction found %d matches", len(js_products))
+                for jp in js_products[:5]:
+                    promo = self._build_promo_from_js(jp, listino_eur, search_url)
+                    if promo:
+                        results.append(promo)
+
+            # --- Deals page ---
             await self._random_delay()
 
             try:
-                await page.goto(self.config["promo_url"], wait_until="domcontentloaded", timeout=30000)
+                logger.info("[amazon] Checking deals page: %s", self.config["promo_url"])
+                await page.goto(self.config["promo_url"], wait_until="networkidle", timeout=45000)
                 await self._random_delay()
+                await self._log_page_state(page, "deals")
 
                 deal_cards = await page.query_selector_all(
                     "div[data-testid='deal-card'], div.DealCard-module, div[class*='DealCard']"
                 )
+                logger.info("[amazon] Found %d deal cards", len(deal_cards))
 
                 for card in deal_cards[:20]:
                     try:
@@ -211,18 +231,20 @@ class AmazonScraper(BaseScraper):
                         if prezzo_promo is None:
                             continue
 
-                        # Try to get original price
                         orig_el = await card.query_selector(
                             "span[class*='strikethrough'], span.a-text-price span.a-offscreen"
                         )
-                        prezzo_originale = prezzo_promo
+                        prezzo_originale = None
                         if orig_el:
                             orig_text = await orig_el.inner_text()
                             parsed_orig = self._parse_price(orig_text)
                             if parsed_orig and parsed_orig > prezzo_promo:
                                 prezzo_originale = parsed_orig
 
-                        if prezzo_originale <= prezzo_promo:
+                        if prezzo_originale is None and listino_eur and listino_eur > prezzo_promo:
+                            prezzo_originale = listino_eur
+
+                        if prezzo_originale is None or prezzo_originale <= prezzo_promo:
                             continue
 
                         link_el = await card.query_selector("a[href]")
@@ -234,6 +256,11 @@ class AmazonScraper(BaseScraper):
 
                         sconto = self._calc_discount(prezzo_originale, prezzo_promo)
                         promo_tag = await self._detect_promo_tag(card)
+
+                        logger.info(
+                            "[amazon] DEAL FOUND: %s | %.2f -> %.2f (%.1f%%) tag=%s",
+                            title_text[:60], prezzo_originale, prezzo_promo, sconto, promo_tag,
+                        )
 
                         results.append(
                             PromoResult(
@@ -250,31 +277,56 @@ class AmazonScraper(BaseScraper):
                         )
 
                     except Exception as e:
-                        logger.debug("Error parsing Amazon deal card: %s", str(e))
+                        logger.debug("[amazon] Error parsing deal card: %s", e)
                         continue
 
             except Exception as e:
-                logger.warning("Error checking Amazon deals page: %s", str(e))
+                logger.warning("[amazon] Error on deals page: %s", e)
 
         finally:
             await page.close()
 
+        logger.info("[amazon] Total results for '%s %s': %d", product_brand, product_model, len(results))
         return results
 
-    def _is_matching_product(self, title: str, model: str, brand: str) -> bool:
-        """Check if title matches the product we're looking for."""
-        title_lower = title.lower()
-        model_parts = model.lower().split()
-        brand_lower = brand.lower()
+    def _build_promo_from_js(self, jp: dict, listino_eur: float, fallback_url: str) -> Optional[PromoResult]:
+        prices = []
+        for raw in jp.get("prices", []):
+            p = self._parse_price(raw)
+            if p:
+                prices.append(p)
 
-        if brand_lower not in title_lower:
-            return False
+        if not prices:
+            return None
 
-        match_count = sum(1 for part in model_parts if part in title_lower)
-        return match_count >= len(model_parts) * 0.6
+        prezzo_promo = min(prices)
+        prezzo_originale = max(prices) if len(prices) > 1 and max(prices) > prezzo_promo else None
+
+        if prezzo_originale is None and listino_eur and listino_eur > prezzo_promo:
+            prezzo_originale = listino_eur
+
+        if prezzo_originale is None or prezzo_originale <= prezzo_promo:
+            return None
+
+        sconto = self._calc_discount(prezzo_originale, prezzo_promo)
+        url = jp.get("href", "") or fallback_url
+
+        logger.info("[amazon][JS] PROMO: %s | %.2f -> %.2f (%.1f%%)",
+                    jp.get("title", "")[:60], prezzo_originale, prezzo_promo, sconto)
+
+        return PromoResult(
+            retailer="amazon",
+            retailer_variant=None,
+            prezzo_originale=prezzo_originale,
+            prezzo_promo=prezzo_promo,
+            sconto_percentuale=sconto,
+            data_inizio=date.today(),
+            data_fine=None,
+            url_fonte=url,
+            promo_tag="Sconto Amazon",
+        )
 
     async def _detect_promo_tag(self, card) -> Optional[str]:
-        """Detect promotional badge/tag from Amazon card."""
         tag_selectors = [
             ("span.a-badge-text", None),
             ("span[data-a-badge-type]", None),
@@ -290,7 +342,6 @@ class AmazonScraper(BaseScraper):
                 text = await el.inner_text()
                 text = text.strip()
                 if text:
-                    # Normalize known tag types
                     text_lower = text.lower()
                     if "lampo" in text_lower or "lightning" in text_lower:
                         return "Offerta Lampo"
@@ -308,7 +359,6 @@ class AmazonScraper(BaseScraper):
                 elif default_text:
                     return default_text
 
-        # Check for percentage badge near price
         pct_el = await card.query_selector("span[class*='savingsPercentage'], span.a-color-price")
         if pct_el:
             pct_text = await pct_el.inner_text()

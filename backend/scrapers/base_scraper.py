@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import re
 from abc import ABC, abstractmethod
 from datetime import date, datetime, timezone
 from typing import Dict, List, Optional
@@ -31,6 +32,12 @@ RETAILERS = {
         "promo_url": "https://www.amazon.it/deals",
     },
 }
+
+# Regex for Italian prices: €1.299,99 or 1.299,99€ or 1299,99 or €1299
+PRICE_RE = re.compile(
+    r"€\s*(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)"
+    r"|(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)\s*€"
+)
 
 
 class PromoResult:
@@ -93,7 +100,7 @@ class BaseScraper(ABC):
             user_agent=(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
+                "Chrome/124.0.0.0 Safari/537.36"
             ),
             locale="it-IT",
         )
@@ -108,9 +115,20 @@ class BaseScraper(ABC):
         cleaned = text.strip().replace("€", "").replace("\xa0", "").strip()
         cleaned = cleaned.replace(".", "").replace(",", ".")
         try:
-            return float(cleaned)
+            val = float(cleaned)
+            return val if val > 0 else None
         except (ValueError, TypeError):
             return None
+
+    def _extract_prices_from_text(self, text: str) -> List[float]:
+        """Extract all Italian-format prices from a text string."""
+        prices = []
+        for m in PRICE_RE.finditer(text):
+            raw = m.group(1) or m.group(2)
+            p = self._parse_price(raw)
+            if p and p > 1:
+                prices.append(p)
+        return sorted(set(prices))
 
     def _calc_discount(self, original: float, promo: float) -> float:
         """Calculate discount percentage."""
@@ -123,27 +141,137 @@ class BaseScraper(ABC):
         now = datetime.now(timezone.utc)
         return f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
 
+    def _is_matching_product(self, title: str, model: str, brand: str) -> bool:
+        """Check if title matches the product we're looking for."""
+        if not title:
+            return False
+        title_lower = title.lower()
+        model_parts = model.lower().split()
+        brand_lower = brand.lower()
+
+        if brand_lower not in title_lower:
+            return False
+
+        match_count = sum(1 for part in model_parts if part in title_lower)
+        return match_count >= max(1, len(model_parts) * 0.5)
+
+    async def _dismiss_cookies(self, page: Page):
+        """Try to dismiss cookie consent banners."""
+        cookie_selectors = [
+            "#onetrust-accept-btn-handler",
+            "[id*='cookie'] button[id*='accept']",
+            "button[id*='accept']",
+            "[class*='cookie'] button",
+            "#sp-cc-accept",
+            "button:has-text('Accetta')",
+            "button:has-text('Accetto')",
+            "button:has-text('Accept')",
+        ]
+        for sel in cookie_selectors:
+            try:
+                btn = await page.query_selector(sel)
+                if btn and await btn.is_visible():
+                    await btn.click()
+                    await page.wait_for_timeout(1000)
+                    logger.info("[%s] Dismissed cookie banner via %s", self.retailer_name, sel)
+                    return
+            except Exception:
+                continue
+
+    async def _log_page_state(self, page: Page, context: str):
+        """Log the current page state for debugging."""
+        try:
+            title = await page.title()
+            url = page.url
+            body_text = await page.evaluate(
+                "() => (document.body?.innerText || '').substring(0, 300)"
+            )
+            logger.info(
+                "[%s][%s] URL: %s | Title: %s | Preview: %.200s",
+                self.retailer_name, context, url, title, body_text.replace("\n", " "),
+            )
+        except Exception as e:
+            logger.warning("[%s][%s] Could not log page state: %s", self.retailer_name, context, e)
+
+    async def _js_extract_products(self, page: Page, product_model: str, product_brand: str) -> List[dict]:
+        """JavaScript-based fallback extraction — finds products by scanning all text on page."""
+        try:
+            data = await page.evaluate("""(args) => {
+                const [brand, model] = args;
+                const brandLower = brand.toLowerCase();
+                const modelParts = model.toLowerCase().split(' ');
+                const results = [];
+
+                // Find all links that could be product links
+                const links = document.querySelectorAll('a[href]');
+                for (const link of links) {
+                    const text = (link.textContent || '').trim();
+                    const textLower = text.toLowerCase();
+
+                    // Check if this link mentions our product
+                    if (!textLower.includes(brandLower)) continue;
+                    const matchCount = modelParts.filter(p => textLower.includes(p)).length;
+                    if (matchCount < Math.max(1, modelParts.length * 0.5)) continue;
+
+                    // Found a matching product link — look for prices in parent/siblings
+                    let container = link.closest('[class*="product"], [class*="card"], [class*="tile"], article, li') || link.parentElement?.parentElement;
+                    if (!container) continue;
+
+                    const containerText = container.textContent || '';
+
+                    // Extract prices with regex
+                    const priceRe = /€\\s*(\\d{1,3}(?:\\.\\d{3})*(?:,\\d{1,2})?)/g;
+                    const priceRe2 = /(\\d{1,3}(?:\\.\\d{3})*(?:,\\d{1,2}))\\s*€/g;
+                    const prices = [];
+
+                    let m;
+                    while ((m = priceRe.exec(containerText)) !== null) {
+                        prices.push(m[1]);
+                    }
+                    while ((m = priceRe2.exec(containerText)) !== null) {
+                        prices.push(m[1]);
+                    }
+
+                    if (prices.length === 0) continue;
+
+                    results.push({
+                        title: text.substring(0, 200),
+                        href: link.href || '',
+                        prices: prices,
+                        containerText: containerText.substring(0, 500),
+                    });
+                }
+                return results;
+            }""", [product_brand, product_model])
+            return data or []
+        except Exception as e:
+            logger.warning("[%s] JS extraction failed: %s", self.retailer_name, e)
+            return []
+
     @abstractmethod
-    async def search_product(self, product_model: str, product_brand: str) -> List[PromoResult]:
+    async def search_product(
+        self, product_model: str, product_brand: str, listino_eur: float = 0
+    ) -> List[PromoResult]:
         """Search for a product and return promo results if found."""
         ...
 
     async def scrape_with_retry(
-        self, product_model: str, product_brand: str, max_retries: int = 3
+        self, product_model: str, product_brand: str, listino_eur: float = 0, max_retries: int = 2
     ) -> List[PromoResult]:
         """Scrape with exponential backoff retry."""
         for attempt in range(max_retries):
             try:
-                results = await self.search_product(product_model, product_brand)
+                results = await self.search_product(product_model, product_brand, listino_eur)
                 return results
             except Exception as e:
                 wait_time = 2 ** attempt
                 logger.warning(
-                    "Scrape attempt %d/%d failed for %s on %s: %s. Retrying in %ds.",
+                    "[%s] Attempt %d/%d failed for %s %s: %s. Retrying in %ds.",
+                    self.retailer_name,
                     attempt + 1,
                     max_retries,
+                    product_brand,
                     product_model,
-                    self.retailer_name,
                     str(e),
                     wait_time,
                 )
