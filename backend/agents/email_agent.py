@@ -70,7 +70,7 @@ def send_weekly_report(pdf_path: str, week: str, highlights: list) -> bool:
         <div style="background: #f5f5f5; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;">
             <p style="color: #999; font-size: 12px; margin: 0;">
                 TDS Tech Deep Search — React SRL<br>
-                Report generato automaticamente | Dati: Euronics, Unieuro, MediaWorld
+                Report generato automaticamente | Dati: Euronics, Unieuro, MediaWorld, Amazon
             </p>
         </div>
     </div>

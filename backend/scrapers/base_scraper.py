@@ -25,6 +25,11 @@ RETAILERS = {
         "search_url": "https://www.mediaworld.it/search/{query}",
         "promo_url": "https://www.mediaworld.it/it/offerte",
     },
+    "amazon": {
+        "base_url": "https://www.amazon.it",
+        "search_url": "https://www.amazon.it/s?k={query}",
+        "promo_url": "https://www.amazon.it/deals",
+    },
 }
 
 
@@ -41,6 +46,7 @@ class PromoResult:
         data_inizio: date,
         data_fine: Optional[date],
         url_fonte: str,
+        promo_tag: Optional[str] = None,
     ):
         self.retailer = retailer
         self.retailer_variant = retailer_variant
@@ -50,6 +56,7 @@ class PromoResult:
         self.data_inizio = data_inizio
         self.data_fine = data_fine
         self.url_fonte = url_fonte
+        self.promo_tag = promo_tag
 
 
 class BaseScraper(ABC):

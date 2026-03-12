@@ -23,6 +23,7 @@ class Promotion(UUIDPrimaryKey, Base):
     data_inizio: Mapped[date] = mapped_column(Date, nullable=False)
     data_fine: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     url_fonte: Mapped[str] = mapped_column(String(500), nullable=False)
+    promo_tag: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     settimana: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     scraped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

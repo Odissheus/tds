@@ -17,11 +17,12 @@ from backend.models.scrape_log import ScrapeLog, ScrapeStatusEnum
 from backend.scrapers.euronics import EuronicsScraper
 from backend.scrapers.unieuro import UnieuroScraper
 from backend.scrapers.mediaworld import MediaWorldScraper
+from backend.scrapers.amazon import AmazonScraper
 from backend.scrapers.base_scraper import BaseScraper, PromoResult
 
 logger = logging.getLogger("tds.agent.scraper")
 
-SCRAPER_CLASSES: List[type] = [EuronicsScraper, UnieuroScraper, MediaWorldScraper]
+SCRAPER_CLASSES: List[type] = [EuronicsScraper, UnieuroScraper, MediaWorldScraper, AmazonScraper]
 
 
 async def run_scraping_for_product(product_id: str) -> dict:
@@ -97,6 +98,7 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                         data_inizio=promo.data_inizio,
                         data_fine=promo.data_fine,
                         url_fonte=promo.url_fonte,
+                        promo_tag=getattr(promo, 'promo_tag', None),
                         settimana=week_str,
                         scraped_at=now,
                     )

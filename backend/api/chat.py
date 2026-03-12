@@ -21,7 +21,7 @@ from backend.models.promotion import Promotion
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 logger = logging.getLogger("tds.api.chat")
 
-CHAT_SYSTEM_PROMPT = """Sei l'assistente BI di TDS Tech Deep Search, sistema di React SRL. Aiuti Tania, responsabile BI per Google Pixel Italia, ad analizzare i dati di monitoraggio volantini dei retailer italiani (Euronics, Unieuro, MediaWorld).
+CHAT_SYSTEM_PROMPT = """Sei l'assistente BI di TDS Tech Deep Search, sistema di React SRL. Aiuti Tania, responsabile BI per Google Pixel Italia, ad analizzare i dati di monitoraggio volantini dei retailer italiani (Euronics, Unieuro, MediaWorld, Amazon).
 
 Hai accesso ai dati di promozione settimanali per Google Pixel e tutti i competitor. Rispondi sempre in italiano, in modo professionale ma diretto.
 
@@ -36,7 +36,7 @@ TOOLS = [
             "properties": {
                 "brand": {"type": "string", "description": "Filtra per brand (es. Google, Samsung)"},
                 "category": {"type": "string", "description": "Filtra per categoria (smartphone, earable, wearable, accessory, bundle)"},
-                "retailer": {"type": "string", "description": "Filtra per retailer (euronics, unieuro, mediaworld)"},
+                "retailer": {"type": "string", "description": "Filtra per retailer (euronics, unieuro, mediaworld, amazon)"},
                 "week": {"type": "string", "description": "Settimana ISO (es. 2026-W11). Default: settimana corrente."},
             },
         },

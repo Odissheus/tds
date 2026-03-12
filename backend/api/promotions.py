@@ -34,6 +34,7 @@ class PromotionOut(BaseModel):
     sconto_percentuale: float
     data_inizio: str
     data_fine: Optional[str]
+    promo_tag: Optional[str]
     url_fonte: str
     settimana: str
     scraped_at: str
@@ -97,6 +98,7 @@ async def list_promotions(
             sconto_percentuale=promo.sconto_percentuale,
             data_inizio=str(promo.data_inizio),
             data_fine=str(promo.data_fine) if promo.data_fine else None,
+            promo_tag=promo.promo_tag,
             url_fonte=promo.url_fonte,
             settimana=promo.settimana,
             scraped_at=promo.scraped_at.isoformat(),
