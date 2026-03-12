@@ -111,8 +111,26 @@ def _send_email(
     attachment_name: str = None,
 ) -> bool:
     """Send email via SendGrid."""
-    # Read API key from env at call time (Coolify injects at runtime)
-    api_key = os.environ.get("SENDGRID_API_KEY", "") or settings.SENDGRID_API_KEY
+    # Force re-read env (Celery worker may have stale env from fork)
+    # Also try reading from /app/.env or /run/secrets if available
+    api_key = os.environ.get("SENDGRID_API_KEY", "")
+    if not api_key:
+        # Try reading from dotenv file (Coolify runtime injection)
+        for env_path in ["/app/.env", ".env"]:
+            if os.path.isfile(env_path):
+                try:
+                    with open(env_path, "r") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line.startswith("SENDGRID_API_KEY="):
+                                api_key = line.split("=", 1)[1].strip().strip("'\"")
+                                break
+                except Exception:
+                    pass
+            if api_key:
+                break
+    if not api_key:
+        api_key = settings.SENDGRID_API_KEY
     if not api_key:
         logger.warning("SENDGRID_API_KEY not set (checked env + settings), skipping email")
         return False
