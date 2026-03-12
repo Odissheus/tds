@@ -111,9 +111,14 @@ def _send_email(
     attachment_name: str = None,
 ) -> bool:
     """Send email via SendGrid."""
-    if not settings.SENDGRID_API_KEY:
-        logger.warning("SENDGRID_API_KEY not set, skipping email send")
+    # Read API key from env at call time (Coolify injects at runtime)
+    api_key = os.environ.get("SENDGRID_API_KEY", "") or settings.SENDGRID_API_KEY
+    if not api_key:
+        logger.warning("SENDGRID_API_KEY not set (checked env + settings), skipping email")
         return False
+
+    logger.info("Sending email: %s (key present: %s, recipients: %s)",
+                subject[:60], bool(api_key), ", ".join(settings.EMAIL_TO))
 
     try:
         message = Mail(
@@ -135,7 +140,7 @@ def _send_email(
             )
             message.attachment = attachment
 
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg = SendGridAPIClient(api_key)
         response = sg.send(message)
 
         logger.info(
@@ -147,5 +152,5 @@ def _send_email(
         return response.status_code in (200, 201, 202)
 
     except Exception as e:
-        logger.error("Failed to send email: %s", str(e))
+        logger.error("Failed to send email '%s': %s", subject[:60], str(e))
         return False
