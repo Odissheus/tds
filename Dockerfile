@@ -67,5 +67,7 @@ ENV TZ=Europe/Rome
 
 EXPOSE 8000
 
-# Default command: run FastAPI with Uvicorn
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--access-log"]
+# Startup script: Celery worker + Uvicorn
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
