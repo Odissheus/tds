@@ -4,6 +4,7 @@ Property of React SRL.
 """
 import logging
 import os
+import subprocess
 import sys
 
 from contextlib import asynccontextmanager
@@ -34,6 +35,16 @@ limiter = Limiter(key_func=get_remote_address)
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
     logger.info("TDS Tech Deep Search starting up — React SRL")
+
+    # Start Celery worker as subprocess
+    subprocess.Popen([
+        sys.executable, "-m", "celery",
+        "-A", "backend.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--concurrency=2",
+    ])
+    logger.info("Celery worker started as subprocess")
 
     # Start scheduler
     from backend.scheduler import setup_scheduler
