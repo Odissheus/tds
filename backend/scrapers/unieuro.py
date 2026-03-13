@@ -110,7 +110,8 @@ class UnieuroScraper(BaseScraper):
             logger.info("[unieuro] JS extraction found %d matching products", len(data or []))
 
             for item in (data or []):
-                prices = sorted(item.get("prices", []))
+                # Filter out installment prices (< €15) and sort
+                prices = sorted([p for p in item.get("prices", []) if p >= 15])
                 if not prices:
                     continue
 
@@ -123,12 +124,18 @@ class UnieuroScraper(BaseScraper):
                 if prezzo_originale is None or prezzo_originale <= prezzo_promo:
                     continue
 
+                sconto = self._calc_discount(prezzo_originale, prezzo_promo)
+
+                # Skip implausible discounts (>60% usually means installment price was grabbed)
+                if sconto > 60:
+                    logger.info("[unieuro] SKIPPED (discount too high %.1f%%): %s",
+                                sconto, item.get("title", "")[:60])
+                    continue
+
                 href = item.get("href", "")
                 url = href if href and href.startswith("http") else (
                     f"https://www.unieuro.it{href}" if href else "https://www.unieuro.it"
                 )
-
-                sconto = self._calc_discount(prezzo_originale, prezzo_promo)
 
                 logger.info("[unieuro] PROMO: %s | %.2f -> %.2f (%.1f%%)",
                             item.get("title", "")[:60], prezzo_originale, prezzo_promo, sconto)
