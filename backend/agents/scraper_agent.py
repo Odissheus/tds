@@ -67,7 +67,12 @@ async def run_full_scraping() -> dict:
                 logger.error("FATAL error scraping %s %s: %s", product.brand, product.model, str(e))
                 stats["total_errors"] += 1
 
-        session.commit()
+            # Commit after EACH product so data is persisted immediately
+            try:
+                session.commit()
+            except Exception as e:
+                logger.error("COMMIT FAILED after product %s %s: %s", product.brand, product.model, str(e))
+                session.rollback()
 
     logger.info(
         "=== FULL SCRAPING COMPLETE: %d products | %d found | %d not_found | %d errors ===",
@@ -127,7 +132,7 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                 any_found = True
                 result["found"] += 1
                 logger.info(
-                    "[%s] FOUND %d promos for %s %s (saved to DB, week=%s)",
+                    "[%s] FOUND %d promos for %s %s (added to session, week=%s)",
                     retailer, len(promos), product.brand, product.model, week_str,
                 )
             else:
