@@ -4,8 +4,10 @@ Amazon.it scraper — Playwright with anti-bot measures.
 import asyncio
 import logging
 import random
+import re
 from datetime import date
 from typing import List, Optional
+from urllib.parse import urlparse, urlunparse
 
 from backend.scrapers.base_scraper import BaseScraper, PromoResult, RETAILERS
 
@@ -63,6 +65,19 @@ class AmazonScraper(BaseScraper):
 
     async def _random_delay(self):
         await asyncio.sleep(random.uniform(2.0, 5.0))
+
+    @staticmethod
+    def _clean_amazon_url(url: str) -> str:
+        """Strip tracking parameters from Amazon URLs to keep them short."""
+        if not url or "amazon" not in url:
+            return url
+        # Amazon product URLs: /dp/ASIN/... — strip everything after ref=
+        match = re.match(r'(https?://www\.amazon\.\w+/[^?]*?/dp/[A-Z0-9]{10})', url)
+        if match:
+            return match.group(1)
+        # Fallback: strip query string
+        parsed = urlparse(url)
+        return urlunparse(parsed._replace(query="", fragment=""))[:2000]
 
     async def search_product(
         self, product_model: str, product_brand: str, listino_eur: float = 0
@@ -136,7 +151,8 @@ class AmazonScraper(BaseScraper):
                     if link_el:
                         href = await link_el.get_attribute("href")
                         if href:
-                            url = href if href.startswith("http") else f"https://www.amazon.it{href}"
+                            raw_url = href if href.startswith("http") else f"https://www.amazon.it{href}"
+                            url = self._clean_amazon_url(raw_url)
 
                     promo_tag = await self._detect_promo_tag(card)
 
@@ -234,7 +250,7 @@ class AmazonScraper(BaseScraper):
         sconto = self._calc_discount(prezzo_originale, prezzo_promo)
         if sconto > MAX_DISCOUNT_PCT:
             return None
-        url = jp.get("href", "") or fallback_url
+        url = self._clean_amazon_url(jp.get("href", "")) or fallback_url
         logger.info("[amazon][JS] PROMO: %s | %.2f -> %.2f (%.1f%%)",
                     jp.get("title", "")[:60], prezzo_originale, prezzo_promo, sconto)
         return PromoResult(

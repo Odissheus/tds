@@ -106,6 +106,10 @@ async def _scrape_product(session: Session, product: Product) -> dict:
 
             if promos:
                 for promo in promos:
+                    # Truncate URL to 2000 chars (DB column limit)
+                    url = promo.url_fonte or ""
+                    if len(url) > 2000:
+                        url = url[:2000]
                     promotion = Promotion(
                         product_id=product.id,
                         retailer=promo.retailer,
@@ -115,7 +119,7 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                         sconto_percentuale=promo.sconto_percentuale,
                         data_inizio=promo.data_inizio,
                         data_fine=promo.data_fine,
-                        url_fonte=promo.url_fonte,
+                        url_fonte=url,
                         promo_tag=getattr(promo, 'promo_tag', None),
                         settimana=week_str,
                         scraped_at=now,
