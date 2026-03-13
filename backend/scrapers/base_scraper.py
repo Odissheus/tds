@@ -12,7 +12,7 @@ logger = logging.getLogger("tds.scraper")
 RETAILERS = {
     "euronics": {
         "base_url": "https://www.euronics.it",
-        "search_url": "https://www.euronics.it/search?query={query}",
+        "search_url": "https://www.euronics.it/search?q={query}",
         "promo_url": "https://www.euronics.it/offerte/",
         "variants": ["Tufano", "Di Mo", "Bruno", "Comet", "IRES", "Butali"],
     },

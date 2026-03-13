@@ -192,6 +192,7 @@ function PromozioniTab() {
     const [promos, setPromos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [f, setF] = useState({brands:[],categories:[],retailers:[],tier:null,googleOnly:false,week:''});
+    const [activeRetailer, setActiveRetailer] = useState('all');
     const brands = ['Google','Samsung','Apple','Honor','OPPO','Xiaomi','Redmi','POCO','Motorola'];
     const cats = ['smartphone','earable','wearable','accessory','bundle'];
     const rets = ['euronics','unieuro','mediaworld','amazon'];
@@ -204,6 +205,7 @@ function PromozioniTab() {
         if(f.retailers.length&&!f.retailers.includes(p.retailer)) return false;
         if(f.tier!==null&&p.tier!==f.tier) return false;
         if(f.googleOnly&&!p.is_google) return false;
+        if(activeRetailer!=='all'&&p.retailer!==activeRetailer) return false;
         return true;
     });
 
@@ -249,6 +251,18 @@ function PromozioniTab() {
                     </ResponsiveContainer>
                 </div>
             )}
+
+            <div className="flex items-center gap-1 bg-white rounded-xl p-1.5 shadow-card">
+                {[{id:'all',label:'Tutti'},{id:'amazon',label:'Amazon'},{id:'euronics',label:'Euronics'},{id:'unieuro',label:'Unieuro'},{id:'mediaworld',label:'MediaWorld'}].map(r=>(
+                    <button key={r.id} onClick={()=>setActiveRetailer(r.id)}
+                        className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${activeRetailer===r.id?'bg-brand text-white shadow-sm':'text-txt-2 hover:bg-surface-2'}`}>
+                        {r.label}
+                        <span className={`ml-1.5 text-[10px] ${activeRetailer===r.id?'text-white/70':'text-txt-3'}`}>
+                            {r.id==='all'?promos.length:promos.filter(p=>p.retailer===r.id).length}
+                        </span>
+                    </button>
+                ))}
+            </div>
 
             {loading ? <div className="text-center py-16 text-txt-3">Caricamento promozioni...</div> : (
                 <div className="bg-white rounded-xl shadow-card overflow-hidden">
