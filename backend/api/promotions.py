@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_async_session
@@ -45,6 +45,59 @@ def _get_current_week() -> str:
     return f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
 
 
+@router.get("/debug")
+async def debug_promotions(session: AsyncSession = Depends(get_async_session)):
+    """Diagnostic endpoint — shows what's actually in the DB."""
+    current_week = _get_current_week()
+
+    # Total count (no filters)
+    total_result = await session.execute(select(func.count(Promotion.id)))
+    total_count = total_result.scalar() or 0
+
+    # Count per week
+    weeks_result = await session.execute(
+        select(Promotion.settimana, func.count(Promotion.id))
+        .group_by(Promotion.settimana)
+        .order_by(Promotion.settimana.desc())
+        .limit(10)
+    )
+    weeks = [{"week": row[0], "count": row[1]} for row in weeks_result.all()]
+
+    # Count for current week specifically
+    current_result = await session.execute(
+        select(func.count(Promotion.id)).where(Promotion.settimana == current_week)
+    )
+    current_count = current_result.scalar() or 0
+
+    # Count per retailer (all time)
+    retailers_result = await session.execute(
+        select(Promotion.retailer, func.count(Promotion.id))
+        .group_by(Promotion.retailer)
+    )
+    retailers = {row[0]: row[1] for row in retailers_result.all()}
+
+    # Raw SQL check (bypass ORM entirely)
+    raw_result = await session.execute(text("SELECT COUNT(*) FROM promotions"))
+    raw_count = raw_result.scalar() or 0
+
+    # Check products count
+    products_result = await session.execute(text("SELECT COUNT(*) FROM products"))
+    products_count = products_result.scalar() or 0
+
+    debug_data = {
+        "current_week": current_week,
+        "total_promotions_orm": total_count,
+        "total_promotions_raw_sql": raw_count,
+        "current_week_count": current_count,
+        "weeks_in_db": weeks,
+        "retailers": retailers,
+        "products_count": products_count,
+    }
+
+    logger.info("DEBUG promotions: %s", debug_data)
+    return debug_data
+
+
 @router.get("", response_model=List[PromotionOut])
 async def list_promotions(
     week: Optional[str] = None,
@@ -59,7 +112,32 @@ async def list_promotions(
     if not week:
         week = _get_current_week()
 
-    logger.info("GET /api/promotions — filtering week=%s", week)
+    # Diagnostic: count total and for this week
+    total_result = await session.execute(select(func.count(Promotion.id)))
+    total_count = total_result.scalar() or 0
+    week_result = await session.execute(
+        select(func.count(Promotion.id)).where(Promotion.settimana == week)
+    )
+    week_count = week_result.scalar() or 0
+
+    logger.info(
+        "GET /api/promotions — week=%s | total_in_db=%d | matching_week=%d",
+        week, total_count, week_count,
+    )
+
+    # If no results for current week but data exists, log available weeks
+    if week_count == 0 and total_count > 0:
+        weeks_result = await session.execute(
+            select(Promotion.settimana, func.count(Promotion.id))
+            .group_by(Promotion.settimana)
+            .order_by(Promotion.settimana.desc())
+            .limit(5)
+        )
+        available = [(row[0], row[1]) for row in weeks_result.all()]
+        logger.warning(
+            "MISMATCH: 0 promos for week=%s but %d total exist. Available weeks: %s",
+            week, total_count, available,
+        )
 
     query = (
         select(Promotion, Product)
@@ -83,7 +161,7 @@ async def list_promotions(
     results = await session.execute(query)
     rows = results.all()
 
-    logger.info("GET /api/promotions — found %d promotions for week=%s", len(rows), week)
+    logger.info("GET /api/promotions — returning %d promotions for week=%s", len(rows), week)
 
     return [
         PromotionOut(
