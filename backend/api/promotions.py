@@ -161,7 +161,15 @@ async def list_promotions(
     results = await session.execute(query)
     rows = results.all()
 
-    logger.info("GET /api/promotions — returning %d promotions for week=%s", len(rows), week)
+    # Deduplicate: keep only lowest prezzo_promo per (product_id, retailer)
+    best: dict = {}
+    for promo, product in rows:
+        key = (str(promo.product_id), promo.retailer)
+        if key not in best or promo.prezzo_promo < best[key][0].prezzo_promo:
+            best[key] = (promo, product)
+
+    deduped = list(best.values())
+    logger.info("GET /api/promotions — %d raw, %d after dedup for week=%s", len(rows), len(deduped), week)
 
     return [
         PromotionOut(
@@ -185,5 +193,5 @@ async def list_promotions(
             settimana=promo.settimana,
             scraped_at=promo.scraped_at.isoformat(),
         )
-        for promo, product in rows
+        for promo, product in deduped
     ]

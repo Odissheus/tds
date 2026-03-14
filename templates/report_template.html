@@ -201,9 +201,9 @@
 <p class="no-data">Nessuna promozione Pixel smartphone rilevata questa settimana.</p>
 {% endif %}
 
-<!-- SEZIONE 2: Google Pixel Earable, Wearable & Accessori -->
-<h2 class="google">🎧 Sezione 2 — Google Pixel Earable, Wearable & Accessori</h2>
-{% if google_earable_wearable %}
+<!-- SEZIONE 2: Google Pixel Earable, Whearable & Accessori -->
+<h2 class="google">🎧 Sezione 2 — Google Pixel Earable, Whearable & Accessori</h2>
+{% if google_hearable_wearable %}
 <table>
     <thead>
         <tr>
@@ -217,7 +217,7 @@
         </tr>
     </thead>
     <tbody>
-    {% for p in google_earable_wearable %}
+    {% for p in google_hearable_wearable %}
         <tr>
             <td><strong>{{ p.model }}</strong></td>
             <td>{{ p.category }}</td>
@@ -237,7 +237,7 @@
     </tbody>
 </table>
 {% else %}
-<p class="no-data">Nessuna promozione Pixel earable/wearable/accessori rilevata.</p>
+<p class="no-data">Nessuna promozione Pixel hearable/wearable/accessori rilevata.</p>
 {% endif %}
 
 <!-- SEZIONE 3: Bundle Rilevati -->
@@ -307,9 +307,9 @@
 <p class="no-data">Nessuna promozione competitor smartphone rilevata.</p>
 {% endif %}
 
-<!-- SEZIONE 5: Competitor Earable & Wearable -->
-<h2 class="competitor">🎧 Sezione 5 — Competitor Earable & Wearable</h2>
-{% if comp_earable_wearable %}
+<!-- SEZIONE 5: Competitor Earable & Whearable -->
+<h2 class="competitor">🎧 Sezione 5 — Competitor Earable & Whearable</h2>
+{% if comp_hearable_wearable %}
 <table>
     <thead>
         <tr>
@@ -322,7 +322,7 @@
         </tr>
     </thead>
     <tbody>
-    {% for p in comp_earable_wearable %}
+    {% for p in comp_hearable_wearable %}
         <tr>
             <td>{{ p.brand }}</td>
             <td><strong>{{ p.model }}</strong></td>
@@ -335,7 +335,7 @@
     </tbody>
 </table>
 {% else %}
-<p class="no-data">Nessuna promozione competitor earable/wearable rilevata.</p>
+<p class="no-data">Nessuna promozione competitor hearable/wearable rilevata.</p>
 {% endif %}
 
 <!-- SEZIONE 6: EOL in Promozione -->

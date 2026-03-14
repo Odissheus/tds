@@ -13,7 +13,7 @@ logger = logging.getLogger("tds.agent.product")
 SUGGEST_PROMPT = """Dato questo prodotto consumer electronics: '{model_name_raw}' del brand '{brand}', restituisci SOLO un JSON con i campi:
 - series: la serie di appartenenza (es. "Galaxy S25", "Pixel 10", "iPhone 17")
 - model: nome completo corretto del modello
-- category: una tra smartphone|earable|wearable|accessory|bundle
+- category: una tra smartphone|hearable|wearable|accessory|bundle
 - listino_eur: prezzo di listino italiano stimato in float
 - tier_suggested: 1 se è un prodotto attivamente commercializzato nel 2025-2026, 2 se è EOL o in uscita di catalogo
 - notes: stringa breve con motivazione del tier suggerito
@@ -24,7 +24,7 @@ BATCH_IMPORT_PROMPT = """Ricevi una lista di prodotti consumer electronics in fo
 - brand: il brand del prodotto
 - series: la serie di appartenenza
 - model: nome completo corretto
-- category: una tra smartphone|earable|wearable|accessory|bundle
+- category: una tra smartphone|hearable|wearable|accessory|bundle
 - listino_eur: prezzo di listino italiano stimato in float
 - tier_suggested: 1 se attivamente commercializzato 2025-2026, 2 se EOL
 - is_google: true se è un prodotto Google Pixel, false altrimenti

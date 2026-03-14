@@ -90,7 +90,7 @@ function Badge({children, color='blue'}) {
     };
     return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${c[color]||c.blue}`}>{children}</span>;
 }
-function CatBadge({cat}) { const m={smartphone:'blue',earable:'green',wearable:'yellow',accessory:'gray',bundle:'orange'}; return <Badge color={m[cat]||'gray'}>{cat}</Badge>; }
+function CatBadge({cat}) { const m={smartphone:'blue',hearable:'green',wearable:'yellow',accessory:'gray',bundle:'orange'}; return <Badge color={m[cat]||'gray'}>{cat}</Badge>; }
 function TierBadge({t}) { return <Badge color={t===1?'blue':'gray'}>T{t}</Badge>; }
 function StatusBadge({s}) { const m={active:'green',eol:'yellow',disabled:'red'}; return <Badge color={m[s]||'gray'}>{s}</Badge>; }
 function PromoTagBadge({tag}) { if(!tag) return null; const m={'Offerta Lampo':'red','Coupon':'green','Black Friday':'purple','Prime Deal':'blue','Spring Deal':'green','Sconto Amazon':'orange','Offerta del giorno':'yellow'}; return <Badge color={m[tag]||'purple'}>{tag}</Badge>; }
@@ -194,7 +194,7 @@ function PromozioniTab() {
     const [f, setF] = useState({brands:[],categories:[],retailers:[],tier:null,googleOnly:false,week:''});
     const [activeRetailer, setActiveRetailer] = useState('all');
     const brands = ['Google','Samsung','Apple','Honor','OPPO','Xiaomi','Redmi','POCO','Motorola'];
-    const cats = ['smartphone','earable','wearable','accessory','bundle'];
+    const cats = ['smartphone','hearable','wearable','accessory','bundle'];
     const rets = ['euronics','unieuro','mediaworld','amazon'];
 
     useEffect(()=>{ load(); },[f.week]);
@@ -332,7 +332,7 @@ function CatalogoTab() {
         <div className="tab-content space-y-4">
             <div className="flex flex-wrap items-center gap-2">
                 <MultiSelect label="Brand" options={brands} selected={f.brands} onChange={v=>setF({...f,brands:v})}/>
-                <MultiSelect label="Categoria" options={['smartphone','earable','wearable','accessory','bundle']} selected={f.categories} onChange={v=>setF({...f,categories:v})}/>
+                <MultiSelect label="Categoria" options={['smartphone','hearable','wearable','accessory','bundle']} selected={f.categories} onChange={v=>setF({...f,categories:v})}/>
                 {[1,2].map(t=><button key={t} onClick={()=>setF({...f,tier:f.tier===t?null:t})} className={`rounded-lg px-3 py-1.5 text-xs border shadow-sm transition-colors ${f.tier===t?'bg-brand-50 text-brand border-blue-200':'bg-white text-txt-3 border-brd'}`}>Tier {t}</button>)}
                 {['active','eol','disabled'].map(s=><button key={s} onClick={()=>setF({...f,status:f.status===s?null:s})} className={`rounded-lg px-3 py-1.5 text-xs border capitalize shadow-sm transition-colors ${f.status===s?'bg-g-green-50 text-g-green border-green-200':'bg-white text-txt-3 border-brd'}`}>{s}</button>)}
                 <button onClick={()=>setF({...f,googleOnly:!f.googleOnly})} className={`rounded-lg px-3 py-1.5 text-xs border shadow-sm transition-colors ${f.googleOnly?'bg-g-green-50 text-g-green border-green-200':'bg-white text-txt-3 border-brd'}`}>Solo Google</button>
@@ -399,7 +399,7 @@ function AddModal({onClose, onDone}) {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                         <div><span className="text-txt-3">Serie:</span> <input value={sug.series} onChange={e=>setSug({...sug,series:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-28"/></div>
                         <div><span className="text-txt-3">Modello:</span> <input value={sug.model} onChange={e=>setSug({...sug,model:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-28"/></div>
-                        <div><span className="text-txt-3">Categoria:</span> <select value={sug.category} onChange={e=>setSug({...sug,category:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1">{['smartphone','earable','wearable','accessory','bundle'].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+                        <div><span className="text-txt-3">Categoria:</span> <select value={sug.category} onChange={e=>setSug({...sug,category:e.target.value})} className="bg-white border border-brd rounded px-2 py-1 ml-1">{['smartphone','hearable','wearable','accessory','bundle'].map(c=><option key={c} value={c}>{c}</option>)}</select></div>
                         <div><span className="text-txt-3">Listino:</span> <input type="number" value={sug.listino_eur} onChange={e=>setSug({...sug,listino_eur:parseFloat(e.target.value)})} className="bg-white border border-brd rounded px-2 py-1 ml-1 w-20"/></div>
                         <div><span className="text-txt-3">Tier:</span> <TierBadge t={sug.tier_suggested}/></div>
                     </div>

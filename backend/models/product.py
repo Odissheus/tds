@@ -9,7 +9,7 @@ from backend.models.base import Base, TimestampMixin, UUIDPrimaryKey
 
 class CategoryEnum(str, enum.Enum):
     smartphone = "smartphone"
-    earable = "earable"
+    hearable = "hearable"
     wearable = "wearable"
     accessory = "accessory"
     bundle = "bundle"

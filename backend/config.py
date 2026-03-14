@@ -15,7 +15,7 @@ class Settings:
     TZ: str = os.getenv("TZ", "Europe/Rome")
     REPORTS_DIR: str = "/data/reports"
     CLAUDE_MODEL: str = "claude-sonnet-4-20250514"
-    EMAIL_FROM: str = "tds@reactsrl.com"
+    EMAIL_FROM: str = os.getenv("SENDGRID_FROM_EMAIL", "tds@reactsrl.com")
     EMAIL_FROM_NAME: str = "TDS Tech Deep Search"
 
 

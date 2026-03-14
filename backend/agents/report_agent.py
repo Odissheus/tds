@@ -183,10 +183,10 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
 
     # Categorize promos
     google_smartphone = [p for p in promos_data if p["is_google"] and p["category"] == "smartphone"]
-    google_earable_wearable = [p for p in promos_data if p["is_google"] and p["category"] in ("earable", "wearable", "accessory")]
+    google_hearable_wearable = [p for p in promos_data if p["is_google"] and p["category"] in ("hearable", "wearable", "accessory")]
     google_bundles = [p for p in promos_data if p["is_google"] and p["category"] == "bundle"]
     comp_smartphone = [p for p in promos_data if not p["is_google"] and p["category"] == "smartphone"]
-    comp_earable_wearable = [p for p in promos_data if not p["is_google"] and p["category"] in ("earable", "wearable")]
+    comp_hearable_wearable = [p for p in promos_data if not p["is_google"] and p["category"] in ("hearable", "wearable")]
     eol_promos = [p for p in promos_data if p["tier"] == 2]
 
     # Load and render template
@@ -203,10 +203,10 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
         sunday_short=sunday.strftime("%d %b %Y"),
         generated_at=now.strftime("%d/%m/%Y %H:%M"),
         google_smartphone=google_smartphone,
-        google_earable_wearable=google_earable_wearable,
+        google_hearable_wearable=google_hearable_wearable,
         google_bundles=google_bundles,
         comp_smartphone=comp_smartphone,
-        comp_earable_wearable=comp_earable_wearable,
+        comp_hearable_wearable=comp_hearable_wearable,
         eol_promos=eol_promos,
         analysis=analysis,
         price_chart_b64=price_chart_b64,

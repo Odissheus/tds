@@ -35,7 +35,7 @@ TOOLS = [
             "type": "object",
             "properties": {
                 "brand": {"type": "string", "description": "Filtra per brand (es. Google, Samsung)"},
-                "category": {"type": "string", "description": "Filtra per categoria (smartphone, earable, wearable, accessory, bundle)"},
+                "category": {"type": "string", "description": "Filtra per categoria (smartphone, hearable, wearable, accessory, bundle)"},
                 "retailer": {"type": "string", "description": "Filtra per retailer (euronics, unieuro, mediaworld, amazon)"},
                 "week": {"type": "string", "description": "Settimana ISO (es. 2026-W11). Default: settimana corrente."},
             },
