@@ -107,7 +107,7 @@ async def health():
 @app.post("/api/test-email")
 async def test_email():
     """Trigger immediate analysis + PDF + email to hardcoded recipients."""
-    from backend.agents.analysis_agent import run_weekly_analysis, get_current_week_str
+    from backend.agents.analysis_agent import run_weekly_analysis, get_current_week_str, FALLBACK_ANALYSIS
     from backend.agents.report_agent import generate_weekly_report
     from backend.agents.email_agent import send_weekly_report, _send_email
     import base64
@@ -115,7 +115,12 @@ async def test_email():
     week = get_current_week_str()
     logger.info("TEST EMAIL: running analysis for %s", week)
 
-    analysis = run_weekly_analysis(week)
+    try:
+        analysis = run_weekly_analysis(week)
+    except Exception as e:
+        logger.error("TEST EMAIL: analysis failed (%s), using fallback data", e)
+        analysis = FALLBACK_ANALYSIS
+
     logger.info("TEST EMAIL: generating PDF for %s", week)
 
     pdf_path = generate_weekly_report(week, analysis)

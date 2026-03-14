@@ -67,13 +67,18 @@ def run_analysis_task(week: str = None):
 @celery_app.task(name="tds.run_report")
 def run_report_task(week: str = None):
     """Generate weekly report."""
-    from backend.agents.analysis_agent import run_weekly_analysis, get_current_week_str
+    from backend.agents.analysis_agent import run_weekly_analysis, get_current_week_str, FALLBACK_ANALYSIS
     from backend.agents.report_agent import generate_weekly_report
 
     if not week:
         week = get_current_week_str()
 
-    analysis = run_weekly_analysis(week)
+    try:
+        analysis = run_weekly_analysis(week)
+    except Exception as e:
+        logger.error("Analysis failed (%s), generating report with fallback data", e)
+        analysis = FALLBACK_ANALYSIS
+
     pdf_path = generate_weekly_report(week, analysis)
     return {"week": week, "pdf_path": pdf_path, "analysis_keys": list(analysis.keys())}
 

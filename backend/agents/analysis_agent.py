@@ -3,6 +3,7 @@ Analysis Agent — runs Friday 07:30, analyzes weekly promotions via Claude API.
 """
 import json
 import logging
+import time
 from datetime import datetime, timezone
 
 import anthropic
@@ -36,25 +37,36 @@ Restituisci il risultato come JSON con queste chiavi:
 - "insights": insight strategici e raccomandazioni
 - "top_highlights": array di 3 stringhe con i top highlights della settimana (per l'email)"""
 
+# Fallback analysis when Claude API fails
+FALLBACK_ANALYSIS = {
+    "pixel_smartphone": "Analisi AI non disponibile — consultare i dati grezzi nel report.",
+    "pixel_earable_wearable": "Analisi AI non disponibile.",
+    "pixel_bundles": "Nessun bundle analizzato.",
+    "competitor_smartphone": "Analisi AI non disponibile — consultare la dashboard per i dati competitor.",
+    "competitor_earable_wearable": "Analisi AI non disponibile.",
+    "eol_alerts": "Nessun alert EOL disponibile.",
+    "insights": "Analisi AI non disponibile questa settimana. I dati grezzi sono inclusi nel report PDF.",
+    "top_highlights": [
+        "Report generato con dati grezzi (analisi AI non disponibile)",
+        "Consultare la dashboard TDS per i dettagli",
+        "Dati aggiornati alla settimana corrente",
+    ],
+}
+
 
 def get_current_week_str() -> str:
     now = datetime.now(timezone.utc)
     return f"{now.isocalendar()[0]}-W{now.isocalendar()[1]:02d}"
 
 
-def run_weekly_analysis(week: str = None) -> dict:
-    """Run the weekly analysis using Claude API."""
-    if not week:
-        week = get_current_week_str()
-
-    logger.info("Running weekly analysis for %s", week)
-
+def _build_promo_data(week: str) -> list:
+    """Load promotions from DB and build the data list for analysis."""
     with sync_session_factory() as session:
         promotions = (
             session.execute(
                 select(Promotion)
                 .where(Promotion.settimana == week)
-                .order_by(Promotion.retailer, Promotion.scraped_at)
+                .order_by(Promotion.sconto_percentuale.desc())
             )
             .scalars()
             .all()
@@ -89,6 +101,83 @@ def run_weekly_analysis(week: str = None) -> dict:
                 }
             )
 
+    return promo_data
+
+
+def _select_top_promos(promo_data: list, limit: int) -> list:
+    """Select the top N promos by discount, ensuring Google products are included."""
+    google = [p for p in promo_data if p["is_google"]]
+    competitor = [p for p in promo_data if not p["is_google"]]
+
+    # Take all Google promos (usually fewer) + fill remaining with top competitor
+    selected = google[:limit]
+    remaining = limit - len(selected)
+    if remaining > 0:
+        selected.extend(competitor[:remaining])
+
+    return selected
+
+
+def _call_claude(promo_data: list, week: str, total_count: int) -> dict:
+    """Call Claude API with the given promo data. Returns parsed analysis dict."""
+    user_message = f"""Ecco le top {len(promo_data)} promozioni con sconto maggiore per la settimana {week} (su {total_count} totali rilevate):
+
+{json.dumps(promo_data, indent=2, ensure_ascii=False)}
+
+Totale promozioni rilevate: {total_count}
+Di cui Google Pixel: {sum(1 for p in promo_data if p['is_google'])}
+Di cui competitor: {sum(1 for p in promo_data if not p['is_google'])}
+
+Analizza questi dati e produci il report strutturato come specificato."""
+
+    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+    response = client.messages.create(
+        model=settings.CLAUDE_MODEL,
+        max_tokens=4096,
+        system=ANALYSIS_SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    response_text = response.content[0].text
+
+    try:
+        if "```json" in response_text:
+            json_str = response_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in response_text:
+            json_str = response_text.split("```")[1].split("```")[0].strip()
+        else:
+            json_str = response_text.strip()
+
+        return json.loads(json_str)
+    except (json.JSONDecodeError, IndexError):
+        logger.warning("Failed to parse Claude response as JSON, using raw text")
+        return {
+            "pixel_smartphone": response_text,
+            "pixel_earable_wearable": "",
+            "pixel_bundles": "",
+            "competitor_smartphone": "",
+            "competitor_earable_wearable": "",
+            "eol_alerts": "",
+            "insights": "",
+            "top_highlights": ["Analisi settimanale completata", "Vedi report PDF per dettagli", ""],
+        }
+
+
+def run_weekly_analysis(week: str = None) -> dict:
+    """Run the weekly analysis using Claude API.
+
+    Sends only top 20 promos by discount to avoid rate limits.
+    If rate-limited, retries once with top 10 after 60s.
+    If all API calls fail, returns fallback data so reports still generate.
+    """
+    if not week:
+        week = get_current_week_str()
+
+    logger.info("Running weekly analysis for %s", week)
+
+    promo_data = _build_promo_data(week)
+
     if not promo_data:
         logger.warning("No promotions found for week %s", week)
         return {
@@ -106,53 +195,33 @@ def run_weekly_analysis(week: str = None) -> dict:
             ],
         }
 
-    user_message = f"""Ecco i dati di promozione per la settimana {week}:
+    total_count = len(promo_data)
 
-{json.dumps(promo_data, indent=2, ensure_ascii=False)}
-
-Totale promozioni rilevate: {len(promo_data)}
-Di cui Google Pixel: {sum(1 for p in promo_data if p['is_google'])}
-Di cui competitor: {sum(1 for p in promo_data if not p['is_google'])}
-
-Analizza questi dati e produci il report strutturato come specificato."""
-
-    client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+    # First attempt: top 20 promos
+    top_promos = _select_top_promos(promo_data, 20)
+    logger.info("Sending %d/%d promos to Claude API (top by discount)", len(top_promos), total_count)
 
     try:
-        response = client.messages.create(
-            model=settings.CLAUDE_MODEL,
-            max_tokens=4096,
-            system=ANALYSIS_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
-        )
-
-        response_text = response.content[0].text
-
-        try:
-            if "```json" in response_text:
-                json_str = response_text.split("```json")[1].split("```")[0].strip()
-            elif "```" in response_text:
-                json_str = response_text.split("```")[1].split("```")[0].strip()
-            else:
-                json_str = response_text.strip()
-
-            analysis = json.loads(json_str)
-        except (json.JSONDecodeError, IndexError):
-            logger.warning("Failed to parse Claude response as JSON, using raw text")
-            analysis = {
-                "pixel_smartphone": response_text,
-                "pixel_earable_wearable": "",
-                "pixel_bundles": "",
-                "competitor_smartphone": "",
-                "competitor_earable_wearable": "",
-                "eol_alerts": "",
-                "insights": "",
-                "top_highlights": ["Analisi settimanale completata", "Vedi report PDF per dettagli", ""],
-            }
-
+        analysis = _call_claude(top_promos, week, total_count)
         logger.info("Weekly analysis completed for %s", week)
         return analysis
 
+    except anthropic.RateLimitError as e:
+        logger.warning("Rate limited by Anthropic API, waiting 60s then retrying with fewer promos: %s", e)
+        time.sleep(60)
+
+        # Retry with top 10
+        top_promos_small = _select_top_promos(promo_data, 10)
+        logger.info("Retry: sending %d/%d promos to Claude API", len(top_promos_small), total_count)
+
+        try:
+            analysis = _call_claude(top_promos_small, week, total_count)
+            logger.info("Weekly analysis completed on retry for %s", week)
+            return analysis
+        except Exception as e2:
+            logger.error("Claude API retry also failed: %s", e2)
+            return FALLBACK_ANALYSIS
+
     except Exception as e:
-        logger.error("Claude API call failed: %s", str(e))
-        raise
+        logger.error("Claude API call failed: %s", e)
+        return FALLBACK_ANALYSIS
