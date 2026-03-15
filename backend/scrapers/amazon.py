@@ -9,7 +9,7 @@ from datetime import date
 from typing import List, Optional
 from urllib.parse import urlparse, urlunparse
 
-from backend.scrapers.base_scraper import BaseScraper, PromoResult, RETAILERS
+from backend.scrapers.base_scraper import BaseScraper, PromoResult, RETAILERS, extract_storage_gb, detect_bundle
 
 logger = logging.getLogger("tds.scraper.amazon")
 
@@ -111,6 +111,9 @@ class AmazonScraper(BaseScraper):
                     if not self._is_matching_product(title_text, product_model, product_brand):
                         continue
 
+                    storage = extract_storage_gb(title_text)
+                    is_bundle, bundle_desc = detect_bundle(title_text)
+
                     logger.info("[amazon] Matched product: %s", title_text[:80])
 
                     # Extract prices using JS from within the card to avoid grabbing ratings
@@ -166,6 +169,7 @@ class AmazonScraper(BaseScraper):
                         prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
                         sconto_percentuale=sconto, data_inizio=date.today(),
                         data_fine=None, url_fonte=url or search_url, promo_tag=promo_tag,
+                        storage_gb=storage, is_bundle=is_bundle, bundle_description=bundle_desc,
                     ))
 
                 except Exception as e:
@@ -234,6 +238,10 @@ class AmazonScraper(BaseScraper):
             return None
 
     def _build_promo_from_js(self, jp: dict, listino_eur: float, fallback_url: str) -> Optional[PromoResult]:
+        title = jp.get("title", "")
+        storage = extract_storage_gb(title)
+        is_bundle, bundle_desc = detect_bundle(title)
+
         prices = []
         for raw in jp.get("prices", []):
             p = self._parse_price(raw)
@@ -258,6 +266,7 @@ class AmazonScraper(BaseScraper):
             prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
             sconto_percentuale=sconto, data_inizio=date.today(),
             data_fine=None, url_fonte=url, promo_tag="Sconto Amazon",
+            storage_gb=storage, is_bundle=is_bundle, bundle_description=bundle_desc,
         )
 
     async def _detect_promo_tag(self, card) -> Optional[str]:

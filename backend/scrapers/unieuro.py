@@ -14,7 +14,7 @@ import re
 from datetime import date
 from typing import List, Optional
 
-from backend.scrapers.base_scraper import BaseScraper, PromoResult
+from backend.scrapers.base_scraper import BaseScraper, PromoResult, extract_storage_gb, detect_bundle
 
 logger = logging.getLogger("tds.scraper.unieuro")
 
@@ -110,6 +110,10 @@ class UnieuroScraper(BaseScraper):
             logger.info("[unieuro] JS extraction found %d matching products", len(data or []))
 
             for item in (data or []):
+                title = item.get("title", "")
+                storage = extract_storage_gb(title)
+                is_bundle, bundle_desc = detect_bundle(title)
+
                 # Filter out installment prices (< €15) and sort
                 prices = sorted([p for p in item.get("prices", []) if p >= 15])
                 if not prices:
@@ -145,6 +149,7 @@ class UnieuroScraper(BaseScraper):
                     prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
                     sconto_percentuale=sconto, data_inizio=date.today(),
                     data_fine=None, url_fonte=url, promo_tag="Sconto Unieuro",
+                    storage_gb=storage, is_bundle=is_bundle, bundle_description=bundle_desc,
                 ))
 
         finally:

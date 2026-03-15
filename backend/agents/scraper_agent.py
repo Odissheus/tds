@@ -123,6 +123,9 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                         promo_tag=getattr(promo, 'promo_tag', None),
                         settimana=week_str,
                         scraped_at=now,
+                        storage_gb=getattr(promo, 'storage_gb', None),
+                        is_bundle=getattr(promo, 'is_bundle', False),
+                        bundle_description=getattr(promo, 'bundle_description', None),
                     )
                     session.add(promotion)
 

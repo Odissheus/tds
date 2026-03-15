@@ -14,7 +14,7 @@ import logging
 from datetime import date
 from typing import List, Optional
 
-from backend.scrapers.base_scraper import BaseScraper, PromoResult
+from backend.scrapers.base_scraper import BaseScraper, PromoResult, extract_storage_gb, detect_bundle
 
 logger = logging.getLogger("tds.scraper.euronics")
 
@@ -70,6 +70,9 @@ class EuronicsScraper(BaseScraper):
             if not self._is_matching_product(title, product_model, product_brand):
                 return None
 
+            storage = extract_storage_gb(title)
+            is_bundle, bundle_desc = detect_bundle(title)
+
             logger.info("[euronics] Matched: %s", title[:80])
 
             # Promo price from .discount .price-formatted
@@ -123,6 +126,7 @@ class EuronicsScraper(BaseScraper):
                 prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
                 sconto_percentuale=sconto, data_inizio=date.today(),
                 data_fine=None, url_fonte=url, promo_tag="Sconto Euronics",
+                storage_gb=storage, is_bundle=is_bundle, bundle_description=bundle_desc,
             )
         except Exception as e:
             logger.debug("[euronics] Error parsing card: %s", e)
@@ -162,6 +166,9 @@ class EuronicsScraper(BaseScraper):
                 if not self._is_matching_product(title, product_model, product_brand):
                     continue
 
+                storage = extract_storage_gb(title)
+                is_bundle, bundle_desc = detect_bundle(title)
+
                 prezzo_promo = None
                 try:
                     prezzo_promo = float(item.get("price", "0"))
@@ -190,6 +197,7 @@ class EuronicsScraper(BaseScraper):
                     prezzo_originale=prezzo_originale, prezzo_promo=prezzo_promo,
                     sconto_percentuale=sconto, data_inizio=date.today(),
                     data_fine=None, url_fonte=url, promo_tag="Sconto Euronics",
+                    storage_gb=storage, is_bundle=is_bundle, bundle_description=bundle_desc,
                 ))
 
         except Exception as e:
