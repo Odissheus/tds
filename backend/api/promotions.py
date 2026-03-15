@@ -38,6 +38,9 @@ class PromotionOut(BaseModel):
     url_fonte: str
     settimana: str
     scraped_at: str
+    storage_gb: Optional[int]
+    is_bundle: bool
+    bundle_description: Optional[str]
 
 
 def _get_current_week() -> str:
@@ -192,6 +195,9 @@ async def list_promotions(
             url_fonte=promo.url_fonte,
             settimana=promo.settimana,
             scraped_at=promo.scraped_at.isoformat(),
+            storage_gb=promo.storage_gb,
+            is_bundle=promo.is_bundle,
+            bundle_description=promo.bundle_description,
         )
         for promo, product in deduped
     ]

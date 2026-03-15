@@ -16,38 +16,23 @@ from backend.models.promotion import Promotion
 
 logger = logging.getLogger("tds.agent.analysis")
 
-ANALYSIS_SYSTEM_PROMPT = """Sei un analista BI senior specializzato in consumer electronics per il mercato italiano, che lavora per React SRL sul sistema TDS Tech Deep Search. Il tuo interlocutore è Tania, responsabile Business Intelligence per il marketing di Google Pixel in Italia.
+ANALYSIS_SYSTEM_PROMPT = """Sei un analista BI senior per React SRL, sistema TDS Tech Deep Search. Il report è per il team marketing Google Pixel Italia.
 
-Analizza i dati di promozione della settimana e produci:
-(1) Sintesi delle migliori offerte Google Pixel per retailer, divise per categoria — smartphone, hearable, wearable, accessori, bundle
-(2) Analisi promozioni competitor per fascia di prezzo equivalente ai Pixel attivi, anch'essa divisa per categoria
-(3) Identificazione dei momenti in cui conviene spingere sul canale fisico, basata sui gap di prezzo tra Pixel e competitor nella stessa fascia
-(4) Alert su prodotti EOL competitor in promozione anomala
-(5) Insight strategici e raccomandazioni trade marketing per la settimana
+Analizza i dati di promozione settimanale e produci:
+- 3 insight strategici su opportunità/rischi per Google Pixel 10 e Pixel 9 rispetto ai competitor
+- 1 raccomandazione concreta per il team trade marketing
+- Tono professionale business, zero linguaggio tecnico, zero allarmi di sistema
+- Max 250 parole totali
 
-Tono professionale, diretto, come una collega esperta. Parla sempre in italiano. Non usare eccessivi bullet point — scrivi in modo fluido e leggibile.
-
-Restituisci il risultato come JSON con queste chiavi:
-- "pixel_smartphone": analisi offerte Pixel smartphone
-- "pixel_hearable_wearable": analisi offerte Pixel hearable, wearable, accessori
-- "pixel_bundles": bundle rilevati
-- "competitor_smartphone": analisi competitor smartphone
-- "competitor_hearable_wearable": analisi competitor hearable e wearable
-- "eol_alerts": prodotti EOL in promozione anomala
-- "insights": insight strategici e raccomandazioni
-- "top_highlights": array di 3 stringhe con i top highlights della settimana (per l'email)"""
+Restituisci JSON con:
+- "ai_insights": testo unico con i 3 insight + 1 raccomandazione (max 250 parole, italiano)
+- "top_highlights": array di 3 stringhe brevi per l'email (max 15 parole ciascuna)"""
 
 # Fallback analysis when Claude API fails
 FALLBACK_ANALYSIS = {
-    "pixel_smartphone": "Analisi AI non disponibile — consultare i dati grezzi nel report.",
-    "pixel_hearable_wearable": "Analisi AI non disponibile.",
-    "pixel_bundles": "Nessun bundle analizzato.",
-    "competitor_smartphone": "Analisi AI non disponibile — consultare la dashboard per i dati competitor.",
-    "competitor_hearable_wearable": "Analisi AI non disponibile.",
-    "eol_alerts": "Nessun alert EOL disponibile.",
-    "insights": "Analisi AI non disponibile questa settimana. I dati grezzi sono inclusi nel report PDF.",
+    "ai_insights": "Analisi AI non disponibile questa settimana. Consultare i dati nel report PDF.",
     "top_highlights": [
-        "Report generato con dati grezzi (analisi AI non disponibile)",
+        "Report generato con dati grezzi",
         "Consultare la dashboard TDS per i dettagli",
         "Dati aggiornati alla settimana corrente",
     ],
@@ -153,13 +138,7 @@ Analizza questi dati e produci il report strutturato come specificato."""
     except (json.JSONDecodeError, IndexError):
         logger.warning("Failed to parse Claude response as JSON, using raw text")
         return {
-            "pixel_smartphone": response_text,
-            "pixel_hearable_wearable": "",
-            "pixel_bundles": "",
-            "competitor_smartphone": "",
-            "competitor_hearable_wearable": "",
-            "eol_alerts": "",
-            "insights": "",
+            "ai_insights": response_text,
             "top_highlights": ["Analisi settimanale completata", "Vedi report PDF per dettagli", ""],
         }
 
@@ -181,13 +160,7 @@ def run_weekly_analysis(week: str = None) -> dict:
     if not promo_data:
         logger.warning("No promotions found for week %s", week)
         return {
-            "pixel_smartphone": "Nessuna promozione Pixel smartphone rilevata questa settimana.",
-            "pixel_hearable_wearable": "Nessuna promozione Pixel hearable/wearable rilevata.",
-            "pixel_bundles": "Nessun bundle rilevato.",
-            "competitor_smartphone": "Nessuna promozione competitor smartphone rilevata.",
-            "competitor_hearable_wearable": "Nessuna promozione competitor hearable/wearable rilevata.",
-            "eol_alerts": "Nessun alert EOL.",
-            "insights": "Dati insufficienti per insight questa settimana.",
+            "ai_insights": "Nessuna promozione rilevata questa settimana. Dati insufficienti per l'analisi.",
             "top_highlights": [
                 "Nessuna promozione rilevata questa settimana",
                 "Verificare lo stato degli scraper",

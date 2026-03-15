@@ -139,7 +139,7 @@ async def test_email():
     sunday = monday + timedelta(days=6)
     now = datetime.now(timezone.utc)
 
-    subject = f"📱 TDS Report Pixel | Week {iso_week} — {monday.strftime('%d %b')} › {sunday.strftime('%d %b %Y')}"
+    subject = f"TDS Weekly Report — W{iso_week} | Google Pixel Italia | React SRL"
 
     highlights_html = ""
     for h in highlights[:3]:
@@ -149,21 +149,17 @@ async def test_email():
     <div style="font-family: 'Roboto', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #4285F4; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
             <h1 style="color: white; margin: 0; font-size: 24px;">TDS — Tech Deep Search</h1>
-            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0;">© React SRL</p>
+            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0;">React SRL</p>
         </div>
         <div style="background: white; padding: 30px; border: 1px solid #e0e0e0;">
-            <h2 style="color: #333; margin-top: 0;">📱 Report Settimanale Pixel</h2>
-            <p style="color: #666;">Settimana {iso_week} — {monday.strftime('%d %b')} › {sunday.strftime('%d %b %Y')}</p>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h3 style="color: #4285F4; margin-top: 0;">🔝 Top 3 Highlights</h3>
-                <ol style="color: #333; padding-left: 20px;">{highlights_html}</ol>
-            </div>
-            <p style="color: #666; font-size: 14px;">Il report completo è in allegato come PDF.</p>
+            <p style="color: #333; margin-top: 0;">Buongiorno,</p>
+            <p style="color: #666;">Di seguito i 3 highlights della settimana W{iso_week}:</p>
+            <ul style="color: #333; padding-left: 20px;">{highlights_html}</ul>
+            <p style="color: #666; font-size: 14px;">In allegato il report PDF completo con tutti i dati della settimana.</p>
         </div>
         <div style="background: #f5f5f5; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;">
             <p style="color: #999; font-size: 12px; margin: 0;">
-                TDS Tech Deep Search — React SRL<br>
-                Report generato automaticamente | Dati: Euronics, Unieuro, MediaWorld, Amazon
+                React Tech Monitor — TDS | React SRL
             </p>
         </div>
     </div>
