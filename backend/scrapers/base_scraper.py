@@ -39,6 +39,37 @@ PRICE_RE = re.compile(
     r"|(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)\s*€"
 )
 
+STORAGE_RE = re.compile(r'(\d+)\s*(?:GB|gb)', re.IGNORECASE)
+STORAGE_TB_RE = re.compile(r'(\d+)\s*(?:TB|tb)', re.IGNORECASE)
+
+BUNDLE_KEYWORDS = ['+', 'bundle', 'kit', 'pack', 'combo', 'con ', ' e ', 'inclus']
+
+
+def extract_storage_gb(title: str) -> Optional[int]:
+    """Extract storage in GB from product title. Returns None if not found."""
+    if not title:
+        return None
+    m = STORAGE_TB_RE.search(title)
+    if m:
+        return int(m.group(1)) * 1024
+    m = STORAGE_RE.search(title)
+    if m:
+        val = int(m.group(1))
+        if val in (64, 128, 256, 512, 1024):
+            return val
+    return None
+
+
+def detect_bundle(title: str) -> tuple:
+    """Detect if a product listing is a bundle. Returns (is_bundle, bundle_description)."""
+    if not title:
+        return False, None
+    title_lower = title.lower()
+    for kw in BUNDLE_KEYWORDS:
+        if kw in title_lower:
+            return True, title[:500]
+    return False, None
+
 
 class PromoResult:
     """Data class for a scraped promotion result."""
@@ -54,6 +85,9 @@ class PromoResult:
         data_fine: Optional[date],
         url_fonte: str,
         promo_tag: Optional[str] = None,
+        storage_gb: Optional[int] = None,
+        is_bundle: bool = False,
+        bundle_description: Optional[str] = None,
     ):
         self.retailer = retailer
         self.retailer_variant = retailer_variant
@@ -64,6 +98,9 @@ class PromoResult:
         self.data_fine = data_fine
         self.url_fonte = url_fonte
         self.promo_tag = promo_tag
+        self.storage_gb = storage_gb
+        self.is_bundle = is_bundle
+        self.bundle_description = bundle_description
 
 
 class BaseScraper(ABC):

@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, String
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,6 +26,9 @@ class Promotion(UUIDPrimaryKey, Base):
     promo_tag: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     settimana: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     scraped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    storage_gb: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    is_bundle: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    bundle_description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     product = relationship("Product", back_populates="promotions")
 
