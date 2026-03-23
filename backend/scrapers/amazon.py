@@ -1,5 +1,6 @@
 """
 Amazon.it scraper — Playwright with anti-bot measures.
+Improved price extraction with stricter validation for consumer electronics.
 """
 import asyncio
 import logging
@@ -27,10 +28,13 @@ USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
 ]
 
-# Minimum plausible price for consumer electronics (filters out ratings, shipping, etc.)
-MIN_PRICE_EUR = 15.0
-# Maximum plausible discount — anything above this is likely a parsing error
+# Price bounds for consumer electronics
+MIN_PRICE_EUR = 50.0
+MAX_PRICE_EUR = 2500.0
+# Maximum plausible discount
 MAX_DISCOUNT_PCT = 70.0
+# Words indicating refurbished/used products
+REFURB_KEYWORDS = ["ricondizionato", "usato", "renewed", "refurbished", "rigenerato", "seconda mano"]
 
 
 class AmazonScraper(BaseScraper):
@@ -68,16 +72,34 @@ class AmazonScraper(BaseScraper):
 
     @staticmethod
     def _clean_amazon_url(url: str) -> str:
-        """Strip tracking parameters from Amazon URLs to keep them short."""
+        """Strip tracking parameters from Amazon URLs."""
         if not url or "amazon" not in url:
             return url
-        # Amazon product URLs: /dp/ASIN/... — strip everything after ref=
         match = re.match(r'(https?://www\.amazon\.\w+/[^?]*?/dp/[A-Z0-9]{10})', url)
         if match:
             return match.group(1)
-        # Fallback: strip query string
         parsed = urlparse(url)
         return urlunparse(parsed._replace(query="", fragment=""))[:2000]
+
+    def _is_matching_product_strict(self, title: str, model: str, brand: str) -> bool:
+        """Strict matching: brand must be present, >70% of model words must match."""
+        if not title:
+            return False
+        title_lower = title.lower()
+        brand_lower = brand.lower()
+        if brand_lower not in title_lower:
+            return False
+        model_parts = model.lower().split()
+        if not model_parts:
+            return False
+        match_count = sum(1 for part in model_parts if part in title_lower)
+        # Require >70% match
+        return match_count >= max(1, len(model_parts) * 0.7)
+
+    def _is_refurbished(self, title: str) -> bool:
+        """Check if title indicates a refurbished/used product."""
+        title_lower = title.lower()
+        return any(kw in title_lower for kw in REFURB_KEYWORDS)
 
     async def search_product(
         self, product_model: str, product_brand: str, listino_eur: float = 0
@@ -100,23 +122,37 @@ class AmazonScraper(BaseScraper):
             await self._dismiss_cookies(page)
             await self._log_page_state(page, "search")
 
-            product_cards = await page.query_selector_all("div[data-component-type='s-search-result']")
+            # Only select main search results with data-asin (not sponsored)
+            product_cards = await page.query_selector_all(
+                "div[data-component-type='s-search-result'][data-asin]"
+            )
             logger.info("[amazon] Found %d search result cards", len(product_cards))
 
-            for card in product_cards[:8]:
+            for card in product_cards[:10]:
                 try:
+                    # Skip sponsored results
+                    sponsored = await card.query_selector(
+                        "[data-component-type='sp-sponsored-result'], .puis-sponsored-label-text, "
+                        "span.a-color-secondary:has-text('Sponsorizzato')"
+                    )
+                    if sponsored:
+                        continue
+
                     title_el = await card.query_selector("h2 a span, h2 span.a-text-normal")
                     title_text = await title_el.inner_text() if title_el else ""
 
-                    if not self._is_matching_product(title_text, product_model, product_brand):
+                    if not self._is_matching_product_strict(title_text, product_model, product_brand):
                         continue
+
+                    # Check for refurbished
+                    is_refurb = self._is_refurbished(title_text)
 
                     storage = extract_storage_gb(title_text)
                     is_bundle, bundle_desc = detect_bundle(title_text)
 
-                    logger.info("[amazon] Matched product: %s", title_text[:80])
+                    logger.info("[amazon] Matched product: %s (refurb=%s)", title_text[:80], is_refurb)
 
-                    # Extract prices using JS from within the card to avoid grabbing ratings
+                    # Extract prices using JS
                     price_data = await self._extract_prices_js(card)
                     if not price_data:
                         logger.info("[amazon] No price data for: %s", title_text[:60])
@@ -125,9 +161,16 @@ class AmazonScraper(BaseScraper):
                     prezzo_promo = price_data.get("promo")
                     prezzo_originale = price_data.get("original")
 
-                    if prezzo_promo is None or prezzo_promo < MIN_PRICE_EUR:
-                        logger.info("[amazon] Price too low (%.2f) for: %s — likely not a real price",
+                    # Validate price range
+                    if prezzo_promo is None or prezzo_promo < MIN_PRICE_EUR or prezzo_promo > MAX_PRICE_EUR:
+                        logger.info("[amazon] Price out of range (%.2f) for: %s",
                                    prezzo_promo or 0, title_text[:60])
+                        continue
+
+                    # Skip refurbished if price is suspiciously low (>50% below listino)
+                    if is_refurb and listino_eur and prezzo_promo < listino_eur * 0.5:
+                        logger.info("[amazon] SKIP refurbished with low price (%.2f vs listino %.2f): %s",
+                                   prezzo_promo, listino_eur, title_text[:60])
                         continue
 
                     # Fallback to DB listino
@@ -139,9 +182,14 @@ class AmazonScraper(BaseScraper):
                                    title_text[:60], prezzo_promo, prezzo_originale)
                         continue
 
+                    # Validate original price range too
+                    if prezzo_originale > MAX_PRICE_EUR * 1.5:
+                        logger.info("[amazon] Original price too high (%.2f): %s",
+                                   prezzo_originale, title_text[:60])
+                        continue
+
                     sconto = self._calc_discount(prezzo_originale, prezzo_promo)
 
-                    # Sanity check: reject implausible discounts
                     if sconto > MAX_DISCOUNT_PCT:
                         logger.warning(
                             "[amazon] REJECTED implausible discount %.1f%% for %s (%.2f -> %.2f)",
@@ -194,38 +242,68 @@ class AmazonScraper(BaseScraper):
 
     async def _extract_prices_js(self, card) -> Optional[dict]:
         """Extract prices from an Amazon search result card using JS.
-        Only looks inside .a-price containers to avoid grabbing review scores."""
+        Uses .a-price-whole + .a-price-fraction for precise extraction."""
         try:
             data = await card.evaluate("""(el) => {
                 const result = {};
 
-                // Current price: first .a-price that is NOT struck through
+                // Current price: first .a-price NOT struck through, within main result area
+                // Avoid sponsored overlays and rating elements
                 const priceEls = el.querySelectorAll('span.a-price:not([data-a-strike="true"])');
                 for (const p of priceEls) {
-                    // Get the whole+fraction parts, not .a-offscreen (which can be ambiguous)
+                    // Skip if inside a ratings or review section
+                    const parent = p.closest('[class*="rating"], [class*="review"], [class*="star"]');
+                    if (parent) continue;
+
                     const whole = p.querySelector('.a-price-whole');
                     const frac = p.querySelector('.a-price-fraction');
                     if (whole) {
-                        const wholeText = whole.textContent.replace(/[^0-9.]/g, '');
+                        // Clean: remove dots (thousands sep) and non-digits
+                        let wholeText = whole.textContent.replace(/[^0-9]/g, '');
                         const fracText = frac ? frac.textContent.replace(/[^0-9]/g, '') : '00';
-                        const price = parseFloat(wholeText + '.' + fracText);
-                        if (price > 10) {
-                            result.promo = price;
-                            break;
+                        if (wholeText) {
+                            const price = parseFloat(wholeText + '.' + fracText);
+                            if (price >= 50 && price <= 2500) {
+                                result.promo = price;
+                                break;
+                            }
                         }
                     }
                 }
 
                 // Original/struck-through price
-                const strikeEls = el.querySelectorAll('span.a-price[data-a-strike="true"], span.a-text-price');
+                const strikeEls = el.querySelectorAll(
+                    'span.a-price[data-a-strike="true"], span.a-text-price[data-a-strike="true"]'
+                );
                 for (const s of strikeEls) {
                     const offscreen = s.querySelector('.a-offscreen');
                     if (offscreen) {
-                        const text = offscreen.textContent.replace('€', '').replace(/\\s/g, '').replace('.', '').replace(',', '.');
+                        // Parse Italian format: €1.299,99 -> 1299.99
+                        let text = offscreen.textContent
+                            .replace('€', '').replace(/\s/g, '')
+                            .replace(/\./g, '').replace(',', '.');
                         const price = parseFloat(text);
-                        if (price > 10 && (!result.promo || price > result.promo)) {
+                        if (price >= 50 && price <= 3750 && (!result.promo || price > result.promo)) {
                             result.original = price;
                             break;
+                        }
+                    }
+                }
+
+                // Fallback: try .a-text-price (non-struck)
+                if (!result.original) {
+                    const textPriceEls = el.querySelectorAll('span.a-text-price:not(:empty)');
+                    for (const tp of textPriceEls) {
+                        const off = tp.querySelector('.a-offscreen');
+                        if (off) {
+                            let text = off.textContent
+                                .replace('€', '').replace(/\s/g, '')
+                                .replace(/\./g, '').replace(',', '.');
+                            const price = parseFloat(text);
+                            if (price >= 50 && price <= 3750 && (!result.promo || price > result.promo)) {
+                                result.original = price;
+                                break;
+                            }
                         }
                     }
                 }
@@ -242,10 +320,18 @@ class AmazonScraper(BaseScraper):
         storage = extract_storage_gb(title)
         is_bundle, bundle_desc = detect_bundle(title)
 
+        # Check refurbished
+        if self._is_refurbished(title):
+            if listino_eur and any(
+                self._parse_price(raw) and self._parse_price(raw) < listino_eur * 0.5
+                for raw in jp.get("prices", [])
+            ):
+                return None
+
         prices = []
         for raw in jp.get("prices", []):
             p = self._parse_price(raw)
-            if p and p >= MIN_PRICE_EUR:
+            if p and MIN_PRICE_EUR <= p <= MAX_PRICE_EUR:
                 prices.append(p)
         if not prices:
             return None
