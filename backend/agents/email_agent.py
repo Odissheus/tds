@@ -1,5 +1,6 @@
 """
 Email Agent — sends reports and alerts via SendGrid.
+Professional HTML email templates with React SRL branding.
 """
 import logging
 import os
@@ -39,36 +40,114 @@ def send_weekly_report(pdf_path: str, week: str, highlights: list) -> bool:
 
     subject = f"TDS Weekly Report — W{week_num} | Google Pixel Italia | React SRL"
 
+    # Build highlight cards HTML
     highlights_html = ""
     for i, h in enumerate(highlights[:3], 1):
-        highlights_html += f"<li style='margin-bottom:8px;'>{h}</li>"
+        highlights_html += f"""
+        <tr>
+            <td style="padding: 6px 0;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #EFF6FF; border-radius: 8px; border: 1px solid #BFDBFE;">
+                    <tr>
+                        <td style="padding: 12px 16px;">
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td width="36" style="vertical-align: top;">
+                                        <div style="width: 28px; height: 28px; background: #2563EB; color: white; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px;">{i}</div>
+                                    </td>
+                                    <td style="padding-left: 12px; font-size: 14px; color: #1E293B; line-height: 1.5;">
+                                        {h}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        """
 
     body_html = f"""
-    <div style="font-family: 'Roboto', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #4285F4; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">TDS — Tech Deep Search</h1>
-            <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0;">React SRL</p>
-        </div>
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin: 0; padding: 0; background: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #F1F5F9;">
+            <tr><td align="center" style="padding: 24px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
 
-        <div style="background: white; padding: 30px; border: 1px solid #e0e0e0;">
-            <p style="color: #333; margin-top: 0;">Buongiorno,</p>
-            <p style="color: #666;">Di seguito i 3 highlights della settimana W{week_num}:</p>
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: #2563EB; padding: 28px 32px; text-align: center;">
+                            <h1 style="color: #FFFFFF; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">TDS — Tech Deep Search</h1>
+                            <p style="color: rgba(255,255,255,0.8); margin: 6px 0 0; font-size: 13px;">React SRL | Google Pixel Price Intelligence</p>
+                        </td>
+                    </tr>
 
-            <ul style="color: #333; padding-left: 20px;">
-                {highlights_html}
-            </ul>
+                    <!-- Period bar -->
+                    <tr>
+                        <td style="background: #1E40AF; padding: 10px 32px; text-align: center;">
+                            <span style="color: rgba(255,255,255,0.9); font-size: 12px; font-weight: 500;">Settimana W{week_num} &mdash; {monday_str} &ndash; {sunday_str}</span>
+                        </td>
+                    </tr>
 
-            <p style="color: #666; font-size: 14px;">
-                In allegato il report PDF completo con tutti i dati della settimana.
-            </p>
-        </div>
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 32px;">
+                            <p style="color: #1E293B; font-size: 15px; margin: 0 0 8px; font-weight: 600;">Buongiorno,</p>
+                            <p style="color: #64748B; font-size: 14px; margin: 0 0 24px; line-height: 1.5;">
+                                Ecco i <strong style="color: #2563EB;">3 highlights</strong> del monitoraggio promozioni della settimana W{week_num}:
+                            </p>
 
-        <div style="background: #f5f5f5; padding: 15px; text-align: center; border-radius: 0 0 8px 8px; border: 1px solid #e0e0e0; border-top: none;">
-            <p style="color: #999; font-size: 12px; margin: 0;">
-                React Tech Monitor — TDS | React SRL
-            </p>
-        </div>
-    </div>
+                            <!-- Highlights -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                {highlights_html}
+                            </table>
+
+                            <!-- Divider -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 24px 0;">
+                                <tr><td style="border-top: 1px solid #E2E8F0;"></td></tr>
+                            </table>
+
+                            <p style="color: #64748B; font-size: 13px; margin: 0 0 20px; line-height: 1.6;">
+                                In allegato trovi il <strong>report PDF completo</strong> con la griglia prezzi Pixel 10 e Pixel 9,
+                                il benchmark competitor e le insight strategiche AI.
+                            </p>
+
+                            <!-- CTA Button -->
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 8px 0 16px;">
+                                        <table cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="background: #2563EB; border-radius: 8px; padding: 12px 28px;">
+                                                    <span style="color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none;">
+                                                        📄 Report PDF in allegato
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background: #F8FAFC; padding: 20px 32px; border-top: 1px solid #E2E8F0; text-align: center;">
+                            <p style="color: #94A3B8; font-size: 11px; margin: 0; line-height: 1.6;">
+                                <strong>React Tech Monitor</strong> | React SRL<br>
+                                TDS — Tech Deep Search | Report automatico settimanale<br>
+                                Dati: Amazon, Euronics, Unieuro, MediaWorld
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td></tr>
+        </table>
+    </body>
+    </html>
     """
 
     pdf_filename = f"TDS_PixelReport_{now.strftime('%Y-%m-%d')}.pdf"
@@ -84,17 +163,34 @@ def send_weekly_report(pdf_path: str, week: str, highlights: list) -> bool:
 async def send_alert_email(subject: str, body: str) -> bool:
     """Send an alert email."""
     html_content = f"""
-    <div style="font-family: 'Roboto', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #EA4335; padding: 15px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h2 style="color: white; margin: 0;">TDS — Tech Deep Search | Alert</h2>
-        </div>
-        <div style="background: white; padding: 25px; border: 1px solid #e0e0e0;">
-            {body}
-        </div>
-        <div style="background: #f5f5f5; padding: 10px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p style="color: #999; font-size: 11px; margin: 0;">TDS Tech Deep Search — React SRL</p>
-        </div>
-    </div>
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin: 0; padding: 0; background: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background: #F1F5F9;">
+            <tr><td align="center" style="padding: 24px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <tr>
+                        <td style="background: #DC2626; padding: 20px 32px; text-align: center;">
+                            <h2 style="color: #FFFFFF; margin: 0; font-size: 18px; font-weight: 700;">TDS — Tech Deep Search | Alert</h2>
+                            <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 12px;">React SRL</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 28px 32px; color: #1E293B; font-size: 14px; line-height: 1.6;">
+                            {body}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #F8FAFC; padding: 16px 32px; text-align: center; border-top: 1px solid #E2E8F0;">
+                            <p style="color: #94A3B8; font-size: 11px; margin: 0;">TDS Tech Deep Search — React SRL</p>
+                        </td>
+                    </tr>
+                </table>
+            </td></tr>
+        </table>
+    </body>
+    </html>
     """
     return _send_email(subject=subject, html_content=html_content)
 
@@ -107,10 +203,8 @@ def _send_email(
 ) -> bool:
     """Send email via SendGrid."""
     # Force re-read env (Celery worker may have stale env from fork)
-    # Also try reading from /app/.env or /run/secrets if available
     api_key = os.environ.get("SENDGRID_API_KEY", "")
     if not api_key:
-        # Try reading from dotenv file (Coolify runtime injection)
         for env_path in ["/app/.env", ".env"]:
             if os.path.isfile(env_path):
                 try:
