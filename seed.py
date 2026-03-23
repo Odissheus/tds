@@ -20,7 +20,7 @@ CATALOG = [
     # ========================
     # GOOGLE PIXEL — PRIORITY 1 (Pixel 10)
     # ========================
-    {"brand": "Google", "series": "Pixel 10", "model": "Pixel 10", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 799.0, "status": "active"},
+    {"brand": "Google", "series": "Pixel 10", "model": "Pixel 10", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 899.0, "status": "active"},
     {"brand": "Google", "series": "Pixel 10", "model": "Pixel 10 Pro", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1099.0, "status": "active"},
     {"brand": "Google", "series": "Pixel 10", "model": "Pixel 10 Pro XL", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1199.0, "status": "active"},
     {"brand": "Google", "series": "Pixel 10", "model": "Pixel 10 Pro Fold", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1899.0, "status": "active"},
@@ -31,7 +31,7 @@ CATALOG = [
     {"brand": "Google", "series": "Pixel 9", "model": "Pixel 9", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 899.0, "status": "active"},
     {"brand": "Google", "series": "Pixel 9", "model": "Pixel 9 Pro", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1099.0, "status": "active"},
     {"brand": "Google", "series": "Pixel 9", "model": "Pixel 9 Pro XL", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1179.0, "status": "active"},
-    {"brand": "Google", "series": "Pixel 9", "model": "Pixel 9 Pro Fold", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1899.0, "status": "active"},
+    {"brand": "Google", "series": "Pixel 9", "model": "Pixel 9 Pro Fold", "category": "smartphone", "tier": 1, "is_google": True, "listino_eur": 1799.0, "status": "active"},
 
     # ========================
     # SAMSUNG — COMPETITOR

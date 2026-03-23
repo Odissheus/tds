@@ -9,7 +9,7 @@ import logging
 from datetime import date
 from typing import List, Optional
 
-from backend.scrapers.base_scraper import BaseScraper, PromoResult, extract_storage_gb, detect_bundle
+from backend.scrapers.base_scraper import BaseScraper, PromoResult, extract_storage_gb, detect_bundle, CATEGORY_PRICE_BOUNDS
 
 logger = logging.getLogger("tds.scraper.euronics")
 
@@ -389,6 +389,14 @@ class EuronicsScraper(BaseScraper):
         if not self._is_matching_product(title, product_model, product_brand):
             return None
 
+        # Require at least 2 model keyword matches to avoid accessory mis-matches
+        model_parts = product_model.lower().split()
+        title_lower = title.lower()
+        match_count = sum(1 for part in model_parts if part in title_lower)
+        if len(model_parts) >= 2 and match_count < 2:
+            logger.debug("[euronics] Weak match (%d/%d words) for '%s', skipping", match_count, len(model_parts), title[:60])
+            return None
+
         storage = extract_storage_gb(title)
         is_bundle, bundle_desc = detect_bundle(title)
 
@@ -397,6 +405,15 @@ class EuronicsScraper(BaseScraper):
             return None
 
         prezzo_promo = prices[0]
+
+        # Reject if price is below 40% of listino (likely wrong product match)
+        if listino_eur and listino_eur > 0 and prezzo_promo < listino_eur * 0.4:
+            logger.warning(
+                "[euronics] REJECTED price %.2f < 40%% of listino %.2f for: %s",
+                prezzo_promo, listino_eur, title[:80],
+            )
+            return None
+
         prezzo_originale = prices[-1] if len(prices) > 1 and prices[-1] > prezzo_promo else None
 
         if prezzo_originale is None and listino_eur and listino_eur > prezzo_promo:

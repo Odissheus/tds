@@ -39,23 +39,50 @@ PRICE_RE = re.compile(
     r"|(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)\s*€"
 )
 
-STORAGE_RE = re.compile(r'(\d+)\s*(?:GB|gb)', re.IGNORECASE)
-STORAGE_TB_RE = re.compile(r'(\d+)\s*(?:TB|tb)', re.IGNORECASE)
+STORAGE_COMBO_RE = re.compile(r'\b(\d+)\+(\d+)\s*[Gg][Bb]')
+STORAGE_RE = re.compile(r'\b(\d+)\s*(?:GB|gb)', re.IGNORECASE)
+STORAGE_TB_RE = re.compile(r'\b(\d+)\s*(?:TB|tb)', re.IGNORECASE)
+VALID_STORAGE_VALUES = (64, 128, 256, 512, 1024)
 
-BUNDLE_KEYWORDS = ['+', 'bundle', 'kit', 'pack', 'combo', 'con ', ' e ', 'inclus']
+BUNDLE_KEYWORDS = [
+    "con caricatore", "with charger", "+ caricatore",
+    "con cuffie", "con auricolari", "con buds",
+    "con cover", "con custodia", "con case",
+    "con smartwatch", "con watch",
+    "kit ", "bundle", "pack ",
+    "+ moto buds", "+ buds", "+ watch",
+    "starter kit", "special pack",
+    "combo", "inclus",
+]
+
+# Price bounds per category for validation
+CATEGORY_PRICE_BOUNDS = {
+    "smartphone": (150, 2500),
+    "accessory": (5, 300),
+    "hearable": (20, 500),
+    "wearable": (50, 800),
+}
 
 
 def extract_storage_gb(title: str) -> Optional[int]:
     """Extract storage in GB from product title. Returns None if not found."""
     if not title:
         return None
+    # Pattern: 12+256GB -> takes the second (storage) number
+    m = STORAGE_COMBO_RE.search(title)
+    if m:
+        val = int(m.group(2))
+        if val in VALID_STORAGE_VALUES:
+            return val
+    # Pattern: 1TB
     m = STORAGE_TB_RE.search(title)
     if m:
         return int(m.group(1)) * 1024
+    # Pattern: 256GB
     m = STORAGE_RE.search(title)
     if m:
         val = int(m.group(1))
-        if val in (64, 128, 256, 512, 1024):
+        if val in VALID_STORAGE_VALUES:
             return val
     return None
 

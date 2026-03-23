@@ -25,9 +25,45 @@ from backend.models.report import Report, ReportTypeEnum
 # These utilities live in base_scraper; we don't call them here because
 # storage_gb / is_bundle are already populated on the Promotion model
 # by the scraper pipeline.  Imported only so the dependency is explicit.
-from backend.scrapers.base_scraper import extract_storage_gb, detect_bundle  # noqa: F401
+from backend.scrapers.base_scraper import extract_storage_gb, detect_bundle, BUNDLE_KEYWORDS  # noqa: F401
 
 logger = logging.getLogger("tds.agent.report")
+
+
+def _clean_markdown(text: str) -> str:
+    """Convert markdown bold/italic to HTML for PDF rendering."""
+    import re as _re
+    # Bold: **text** -> <strong>text</strong>
+    text = _re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+    # Italic: *text* -> <em>text</em>
+    text = _re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+    # Bullet lists
+    text = _re.sub(r'^[-•]\s+', '&bull; ', text, flags=_re.MULTILINE)
+    return text
+
+
+def _is_valid_bundle_title(title: str) -> bool:
+    """Check if a title represents a genuine bundle (not just a single product)."""
+    if not title:
+        return False
+    title_lower = title.lower()
+    return any(kw in title_lower for kw in BUNDLE_KEYWORDS)
+
+
+def _deduplicate_promos(promos_data: list) -> list:
+    """Global deduplication: keep lowest prezzo_promo per (product_id, retailer, storage_gb, rounded_price)."""
+    best: dict[tuple, dict] = {}
+    for p in promos_data:
+        key = (
+            p.get("product_id", ""),
+            p.get("retailer", ""),
+            p.get("storage_gb") or 0,
+            round(p.get("prezzo_promo", 0), 0),
+        )
+        existing = best.get(key)
+        if existing is None or p["prezzo_promo"] < existing["prezzo_promo"]:
+            best[key] = p
+    return list(best.values())
 
 # Canonical retailer keys used in the price grid columns
 _RETAILER_KEYS = ("amazon", "euronics", "unieuro", "mediaworld")
@@ -304,9 +340,12 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
         weekly_trend = [{"week": w[0], "avg_discount": round(float(w[1]), 1)} for w in weekly_stats]
 
     # ------------------------------------------------------------------
-    # 2. Aggregate non-bundle promos: keep only lowest prezzo_promo
-    #    per (product_id, retailer) — deduplicates colour variants.
+    # 2. Global deduplication — remove exact duplicates first
     # ------------------------------------------------------------------
+    promos_data = _deduplicate_promos(promos_data)
+
+    # Aggregate non-bundle promos: keep only lowest prezzo_promo
+    # per (product_id, retailer) — deduplicates colour variants.
     best_by_product_retailer: dict[tuple, dict] = {}
     for p in promos_data:
         if p["is_bundle"]:
@@ -325,14 +364,27 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
     pixel9_grid = _build_price_grid(promos_data, products_map, "Pixel 9")
 
     # ------------------------------------------------------------------
-    # 4. Bundles
+    # 4. Bundles — Google Pixel only, validated keywords, deduped, max 10
     # ------------------------------------------------------------------
-    bundles = []
+    bundles_raw = []
+    bundle_seen = set()
     for p in promos_data:
         if not p["is_bundle"]:
             continue
-        bundles.append({
-            "description": p["bundle_description"] or p["model"],
+        # Only Google Pixel bundles
+        if not p.get("is_google"):
+            continue
+        # Validate that the title actually contains bundle keywords
+        bundle_title = p.get("bundle_description") or p.get("model", "")
+        if not _is_valid_bundle_title(bundle_title):
+            continue
+        # Dedup by (normalized title prefix, price, retailer)
+        dedup_key = (bundle_title[:60].lower().strip(), round(p["prezzo_promo"], 0), p["retailer"])
+        if dedup_key in bundle_seen:
+            continue
+        bundle_seen.add(dedup_key)
+        bundles_raw.append({
+            "description": bundle_title,
             "prezzo_promo": p["prezzo_promo"],
             "sconto_percentuale": p["sconto_percentuale"],
             "retailer": p["retailer"],
@@ -340,6 +392,9 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
             "data_fine": p["data_fine"],
             "url_fonte": p["url_fonte"],
         })
+    # Sort by discount descending, limit to 10
+    bundles_raw.sort(key=lambda x: x["sconto_percentuale"], reverse=True)
+    bundles = bundles_raw[:10]
 
     # ------------------------------------------------------------------
     # 5. Competitor tables
@@ -436,6 +491,8 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
         words = ai_insights.split()
         if len(words) > 250:
             ai_insights = " ".join(words[:250]) + " ..."
+        # Convert markdown to HTML for PDF rendering
+        ai_insights = _clean_markdown(ai_insights)
 
     # ------------------------------------------------------------------
     # 8. Render HTML template
