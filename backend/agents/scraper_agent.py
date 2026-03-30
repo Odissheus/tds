@@ -20,6 +20,7 @@ from backend.scrapers.unieuro import UnieuroScraper
 from backend.scrapers.mediaworld import MediaWorldScraper
 from backend.scrapers.amazon import AmazonScraper
 from backend.scrapers.base_scraper import BaseScraper, PromoResult
+from backend.agents.price_validator import PriceValidator, price_validator
 
 logger = logging.getLogger("tds.agent.scraper")
 
@@ -42,6 +43,7 @@ async def run_scraping_for_product(product_id: str) -> dict:
 async def run_full_scraping() -> dict:
     """Run scraping for all active products across all retailers."""
     logger.info("=== FULL SCRAPING RUN STARTING ===")
+    price_validator.reset_stats()
     stats = {"total_products": 0, "total_found": 0, "total_not_found": 0, "total_errors": 0}
 
     with sync_session_factory() as session:
@@ -73,6 +75,14 @@ async def run_full_scraping() -> dict:
             except Exception as e:
                 logger.error("COMMIT FAILED after product %s %s: %s", product.brand, product.model, str(e))
                 session.rollback()
+
+    # Log validation stats
+    vstats = price_validator.stats
+    logger.info(
+        "[VALIDATOR] Validated: %d | Rejected: %d | Rate: %s",
+        vstats["total_validated"], vstats["total_rejected"], vstats["rejection_rate"],
+    )
+    stats["validation"] = vstats
 
     logger.info(
         "=== FULL SCRAPING COMPLETE: %d products | %d found | %d not_found | %d errors ===",
@@ -110,6 +120,21 @@ async def _scrape_product(session: Session, product: Product) -> dict:
                     url = promo.url_fonte or ""
                     if len(url) > 2000:
                         url = url[:2000]
+                    # Validate price before saving
+                    is_valid, reason = price_validator.validate(
+                        prezzo_promo=promo.prezzo_promo,
+                        prezzo_originale=promo.prezzo_originale,
+                        category=product.category.value,
+                        listino=product.listino_eur,
+                        retailer=promo.retailer,
+                    )
+                    if not is_valid:
+                        logger.warning(
+                            "[VALIDATOR] Scartato %s su %s: EUR%.2f - %s",
+                            product.model, promo.retailer, promo.prezzo_promo, reason,
+                        )
+                        continue
+
                     promotion = Promotion(
                         product_id=product.id,
                         retailer=promo.retailer,

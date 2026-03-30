@@ -440,7 +440,8 @@
 {% if bundles %}
 {% for b in bundles %}
 <div class="bundle-card">
-    <div class="bundle-title">{{ b.description }}</div>
+    {% if b.synthetic_description %}<div class="bundle-title" style="color:#2563EB; font-size:9pt;">{{ b.synthetic_description }}</div>{% endif %}
+    <div style="font-size:8pt; color:#0F172A; margin-bottom:3px;">{{ b.description }}</div>
     <div class="bundle-meta">
         <span class="badge badge-orange">&euro;{{ "%.2f"|format(b.prezzo_promo) }}</span>
         <span class="badge badge-green">-{{ "%.1f"|format(b.sconto_percentuale) }}%</span>

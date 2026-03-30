@@ -50,6 +50,22 @@ def _is_valid_bundle_title(title: str) -> bool:
     return any(kw in title_lower for kw in BUNDLE_KEYWORDS)
 
 
+def _bundle_synthetic_description(title: str) -> str:
+    """Generate a synthetic description for bundle titles."""
+    if not title:
+        return ""
+    t = title.lower()
+    if "caricatore" in t or "charger" in t or "carica" in t:
+        return "Smartphone + Caricatore incluso"
+    if "buds" in t or "auricolari" in t or "cuffie" in t:
+        return "Smartphone + Auricolari inclusi"
+    if "cover" in t or "custodia" in t or "case" in t:
+        return "Smartphone + Cover inclusa"
+    if "watch" in t or "smartwatch" in t:
+        return "Smartphone + Smartwatch incluso"
+    return "Bundle Smartphone"
+
+
 def _deduplicate_promos(promos_data: list) -> list:
     """Global deduplication: keep lowest prezzo_promo per (product_id, retailer, storage_gb, rounded_price)."""
     best: dict[tuple, dict] = {}
@@ -383,8 +399,12 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
         if dedup_key in bundle_seen:
             continue
         bundle_seen.add(dedup_key)
+        # Generate synthetic bundle description
+        synth_desc = _bundle_synthetic_description(bundle_title)
+
         bundles_raw.append({
             "description": bundle_title,
+            "synthetic_description": synth_desc,
             "prezzo_promo": p["prezzo_promo"],
             "sconto_percentuale": p["sconto_percentuale"],
             "retailer": p["retailer"],
@@ -403,6 +423,19 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
         p for p in deduped
         if not p["is_google"] and p["category"] == "smartphone"
     ]
+
+    # Deduplicate competitors: keep best (lowest) price per model+storage
+    def _best_competitor_by_model(promos):
+        best = {}
+        for p in promos:
+            key = (p["brand"], p["model"], p.get("storage_gb") or 0)
+            existing = best.get(key)
+            if existing is None or p["prezzo_promo"] < existing["prezzo_promo"]:
+                best[key] = p
+        return list(best.values())
+
+    competitor_deduped = _best_competitor_by_model(competitor_promos)
+
     competitor_flagship = [
         {
             "brand": p["brand"],
@@ -412,7 +445,7 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
             "sconto_percentuale": p["sconto_percentuale"],
             "retailer": p["retailer"],
         }
-        for p in competitor_promos
+        for p in competitor_deduped
         if p["prezzo_promo"] > 800
     ]
     competitor_mid = [
@@ -424,7 +457,7 @@ def generate_weekly_report(week: str, analysis: dict) -> str:
             "sconto_percentuale": p["sconto_percentuale"],
             "retailer": p["retailer"],
         }
-        for p in competitor_promos
+        for p in competitor_deduped
         if 400 <= p["prezzo_promo"] <= 800
     ]
     # Sort each list by discount descending

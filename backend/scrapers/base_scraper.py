@@ -39,7 +39,7 @@ PRICE_RE = re.compile(
     r"|(\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?)\s*€"
 )
 
-STORAGE_COMBO_RE = re.compile(r'\b(\d+)\+(\d+)\s*[Gg][Bb]')
+STORAGE_COMBO_RE = re.compile(r'\b(\d+)[+/](\d+)\s*[Gg][Bb]')
 STORAGE_RE = re.compile(r'\b(\d+)\s*(?:GB|gb)', re.IGNORECASE)
 STORAGE_TB_RE = re.compile(r'\b(\d+)\s*(?:TB|tb)', re.IGNORECASE)
 VALID_STORAGE_VALUES = (64, 128, 256, 512, 1024)

@@ -106,3 +106,10 @@ async def mark_product_eol(
     await session.commit()
 
     return {"status": "ok", "message": f"{product.brand} {product.model} marked as EOL"}
+
+
+@router.get("/validation-stats")
+async def validation_stats():
+    """Get price validation statistics from the last scrape run."""
+    from backend.agents.price_validator import price_validator
+    return price_validator.stats
